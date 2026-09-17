@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Entorno virtual
+.venv/
+venv/
+
+# Django
+*.log
+db.sqlite3
+media/
+
+# Variables privadas
+.env
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
