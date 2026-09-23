@@ -12,4 +12,4 @@ class EvaluacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evaluacion
         fields = ["id", "solicitud", "evaluador", "puntaje", "comentario", "fecha"]
-        read_only_fields = ["fecha"]
+        read_only_fields = ["evaluador", "fecha"]

@@ -13,6 +13,7 @@ tocar código.
 """
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -87,7 +88,24 @@ WSGI_APPLICATION = "becas_platform.wsgi.application"
 # Para usar MySQL: crear un archivo .env (ver .env.example) con
 # DB_ENGINE=mysql y las credenciales, e instalar mysqlclient.
 # ---------------------------------------------------------------------------
-if os.environ.get("DB_ENGINE") == "mysql":
+# ---------------------------------------------------------------------------
+# Base de datos
+#
+# Durante las pruebas usamos SQLite para evitar modificar o crear
+# bases de datos en el servidor MySQL de desarrollo.
+#
+# En ejecución normal se utiliza la configuración definida en .env.
+# ---------------------------------------------------------------------------
+
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",
+        }
+    }
+
+elif os.environ.get("DB_ENGINE") == "mysql":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
@@ -96,9 +114,12 @@ if os.environ.get("DB_ENGINE") == "mysql":
             "PASSWORD": os.environ.get("DB_PASSWORD", ""),
             "HOST": os.environ.get("DB_HOST", "localhost"),
             "PORT": os.environ.get("DB_PORT", "3306"),
-            "OPTIONS": {"charset": "utf8mb4"},
+            "OPTIONS": {
+                "charset": "utf8mb4",
+            },
         }
     }
+
 else:
     DATABASES = {
         "default": {
@@ -106,7 +127,6 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
