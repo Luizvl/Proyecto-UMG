@@ -1,0 +1,68 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f2f4f7;
+    margin: 0;
+    padding: 40px 0;
+}
+
+.contenedor {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #1f3864;
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.subtitulo {
+    color: #595959;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.mensaje {
+    background-color: #e6f4ea;
+    color: #1e7e34;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+form p {
+    margin-bottom: 16px;
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+    color: #333;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #1f3864;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    background-color: #16294d;
+}
