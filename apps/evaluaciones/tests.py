@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -52,15 +53,28 @@ class EvaluacionAPITests(APITestCase):
             convocatoria=self.convocatoria,
         )
 
+        # La solicitud debe estar en evaluación
+        # antes de poder recibir evaluaciones.
+        self.solicitud.iniciar_evaluacion()
+
         self.comite = Comite.objects.create(
             nombre="Comité Universitario",
             convocatoria=self.convocatoria,
         )
 
-        self.comite.integrantes.add(self.evaluador)
+        self.comite.integrantes.add(
+            self.evaluador
+        )
 
     def test_miembro_comite_puede_evaluar(self):
-        self.client.force_authenticate(user=self.evaluador)
+        """
+        Un miembro del comité asignado puede
+        registrar una evaluación.
+        """
+
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
 
         response = self.client.post(
             reverse("evaluacion-list"),
@@ -84,8 +98,20 @@ class EvaluacionAPITests(APITestCase):
             self.evaluador,
         )
 
+        self.assertEqual(
+            float(evaluacion.puntaje),
+            85.0,
+        )
+
     def test_no_puede_usar_otro_evaluador(self):
-        self.client.force_authenticate(user=self.evaluador)
+        """
+        Aunque se envíe el ID de otro evaluador,
+        Django utiliza al usuario autenticado.
+        """
+
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
 
         response = self.client.post(
             reverse("evaluacion-list"),
@@ -116,7 +142,14 @@ class EvaluacionAPITests(APITestCase):
         )
 
     def test_usuario_no_asignado_no_puede_evaluar(self):
-        self.client.force_authenticate(user=self.otro_evaluador)
+        """
+        Un miembro del comité que no pertenece
+        al comité de la convocatoria no puede evaluar.
+        """
+
+        self.client.force_authenticate(
+            user=self.otro_evaluador
+        )
 
         response = self.client.post(
             reverse("evaluacion-list"),
@@ -134,19 +167,28 @@ class EvaluacionAPITests(APITestCase):
         )
 
     def test_no_permite_evaluacion_duplicada(self):
+        """
+        El mismo evaluador no puede evaluar
+        dos veces la misma solicitud.
+        """
+
         Evaluacion.objects.create(
             solicitud=self.solicitud,
             evaluador=self.evaluador,
             puntaje=80,
+            comentario="Primera evaluación",
         )
 
-        self.client.force_authenticate(user=self.evaluador)
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
 
         response = self.client.post(
             reverse("evaluacion-list"),
             {
                 "solicitud": self.solicitud.id,
                 "puntaje": 90,
+                "comentario": "Segunda evaluación",
             },
             format="json",
         )
@@ -162,7 +204,14 @@ class EvaluacionAPITests(APITestCase):
         )
 
     def test_estudiante_no_puede_evaluar(self):
-        self.client.force_authenticate(user=self.estudiante)
+        """
+        Un estudiante no tiene permiso
+        para registrar evaluaciones.
+        """
+
+        self.client.force_authenticate(
+            user=self.estudiante
+        )
 
         response = self.client.post(
             reverse("evaluacion-list"),
@@ -179,6 +228,11 @@ class EvaluacionAPITests(APITestCase):
         )
 
     def test_calcula_puntaje_final(self):
+        """
+        Comprueba Factory + Strategy para
+        una beca universitaria.
+        """
+
         Evaluacion.objects.create(
             solicitud=self.solicitud,
             evaluador=self.evaluador,
@@ -191,7 +245,9 @@ class EvaluacionAPITests(APITestCase):
             puntaje=70,
         )
 
-        self.client.force_authenticate(user=self.evaluador)
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
 
         response = self.client.get(
             reverse(
@@ -213,4 +269,102 @@ class EvaluacionAPITests(APITestCase):
         self.assertEqual(
             response.data["estrategia"],
             "PromedioPonderadoStrategy",
+        )
+
+        self.assertEqual(
+            response.data["cantidad_evaluaciones"],
+            2,
+        )
+
+    def test_no_puede_evaluar_solicitud_pendiente(self):
+        """
+        Una solicitud PENDIENTE todavía
+        no puede recibir evaluaciones.
+        """
+
+        self.solicitud.estado = Solicitud.PENDIENTE
+        self.solicitud.save(
+            update_fields=["estado"]
+        )
+
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
+
+        response = self.client.post(
+            reverse("evaluacion-list"),
+            {
+                "solicitud": self.solicitud.id,
+                "puntaje": 80,
+                "comentario": "Prueba.",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+        self.assertEqual(
+            Evaluacion.objects.count(),
+            0,
+        )
+
+    def test_no_permite_puntaje_mayor_a_100(self):
+        """
+        El puntaje máximo permitido es 100.
+        """
+
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
+
+        response = self.client.post(
+            reverse("evaluacion-list"),
+            {
+                "solicitud": self.solicitud.id,
+                "puntaje": 150,
+                "comentario": "Puntaje inválido.",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+        self.assertEqual(
+            Evaluacion.objects.count(),
+            0,
+        )
+
+    def test_no_permite_puntaje_negativo(self):
+        """
+        El puntaje mínimo permitido es 0.
+        """
+
+        self.client.force_authenticate(
+            user=self.evaluador
+        )
+
+        response = self.client.post(
+            reverse("evaluacion-list"),
+            {
+                "solicitud": self.solicitud.id,
+                "puntaje": -10,
+                "comentario": "Puntaje inválido.",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+        self.assertEqual(
+            Evaluacion.objects.count(),
+            0,
         )

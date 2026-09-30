@@ -2,6 +2,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.solicitudes.models import Solicitud
 from apps.usuarios.models import Usuario
 from apps.usuarios.permissions import (
     EsAdministrador,
@@ -10,18 +11,31 @@ from apps.usuarios.permissions import (
 
 from .factories import EstrategiaEvaluacionFactory
 from .models import Comite, Evaluacion
-from .serializers import ComiteSerializer, EvaluacionSerializer
+from .serializers import (
+    ComiteSerializer,
+    EvaluacionSerializer,
+)
 
 
 class ComiteViewSet(viewsets.ModelViewSet):
     """
     Gestión de comités evaluadores.
 
-    - ADMINISTRADOR: puede crear, editar y eliminar comités.
-    - COMITÉ: puede consultar únicamente los comités a los que pertenece.
+    ADMINISTRADOR:
+    - Puede crear, editar y eliminar comités.
+    - Puede consultar todos los comités.
+
+    COMITÉ:
+    - Solo puede consultar los comités
+      a los que pertenece.
     """
 
-    queryset = Comite.objects.prefetch_related("integrantes").all()
+    queryset = Comite.objects.select_related(
+        "convocatoria"
+    ).prefetch_related(
+        "integrantes"
+    )
+
     serializer_class = ComiteSerializer
 
     def get_permissions(self):
@@ -31,22 +45,34 @@ class ComiteViewSet(viewsets.ModelViewSet):
             "partial_update",
             "destroy",
         ]:
-            permission_classes = [EsAdministrador]
-        else:
-            permission_classes = [EsComiteOAdministrador]
+            permission_classes = [
+                EsAdministrador
+            ]
 
-        return [permission() for permission in permission_classes]
+        else:
+            permission_classes = [
+                EsComiteOAdministrador
+            ]
+
+        return [
+            permission()
+            for permission in permission_classes
+        ]
 
     def get_queryset(self):
         qs = super().get_queryset()
         usuario = self.request.user
 
+        if not usuario.is_authenticated:
+            return qs.none()
+
         if (
-            usuario.is_authenticated
-            and usuario.rol == Usuario.Rol.COMITE
+            usuario.rol == Usuario.Rol.COMITE
             and not usuario.is_superuser
         ):
-            qs = qs.filter(integrantes=usuario)
+            return qs.filter(
+                integrantes=usuario
+            )
 
         return qs
 
@@ -55,52 +81,101 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
     """
     Gestión de evaluaciones.
 
-    - COMITÉ y ADMINISTRADOR pueden consultar evaluaciones.
-    - COMITÉ solo puede consultar sus propias evaluaciones.
-    - Al crear una evaluación, el evaluador será siempre
-      el usuario autenticado.
+    COMITÉ:
+    - Puede evaluar únicamente solicitudes
+      de convocatorias donde está asignado.
+    - Solo puede consultar sus propias evaluaciones.
+
+    ADMINISTRADOR:
+    - Puede consultar todas las evaluaciones.
+    - Puede registrar evaluaciones.
+
+    REGLAS:
+    - Solo se evalúan solicitudes EN_EVALUACION.
+    - Un evaluador solo puede evaluar una vez
+      cada solicitud.
+    - El puntaje debe estar entre 0 y 100.
     """
 
     queryset = Evaluacion.objects.select_related(
         "solicitud",
         "evaluador",
         "solicitud__convocatoria",
-    ).all()
+        "solicitud__estudiante",
+    )
 
     serializer_class = EvaluacionSerializer
 
     def get_permissions(self):
-        permission_classes = [EsComiteOAdministrador]
-        return [permission() for permission in permission_classes]
+        permission_classes = [
+            EsComiteOAdministrador
+        ]
+
+        return [
+            permission()
+            for permission in permission_classes
+        ]
 
     def get_queryset(self):
         qs = super().get_queryset()
         usuario = self.request.user
 
+        if not usuario.is_authenticated:
+            return qs.none()
+
         if (
-            usuario.is_authenticated
-            and usuario.rol == Usuario.Rol.COMITE
+            usuario.rol == Usuario.Rol.COMITE
             and not usuario.is_superuser
         ):
-            qs = qs.filter(evaluador=usuario)
+            return qs.filter(
+                evaluador=usuario
+            )
 
         return qs
 
     def create(self, request, *args, **kwargs):
         """
-        El evaluador se obtiene del usuario autenticado.
-        No se permite evaluar usando el ID de otro usuario.
+        Registra una evaluación.
+
+        El evaluador se obtiene siempre del usuario
+        autenticado y nunca del JSON enviado.
         """
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(
+            data=request.data
+        )
 
-        solicitud = serializer.validated_data["solicitud"]
+        serializer.is_valid(
+            raise_exception=True
+        )
 
-        # Un miembro del comité solo puede evaluar solicitudes
-        # de convocatorias para las que fue asignado.
+        solicitud = serializer.validated_data[
+            "solicitud"
+        ]
+
+        # Solo se puede evaluar una solicitud
+        # que ya se encuentra EN_EVALUACION.
         if (
-            request.user.rol == Usuario.Rol.COMITE
+            solicitud.estado
+            != Solicitud.EN_EVALUACION
+        ):
+            return Response(
+                {
+                    "detail": (
+                        "La solicitud debe estar en estado "
+                        "'En Evaluación' para registrar "
+                        "una evaluación."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Si es miembro del comité, se valida que
+        # realmente pertenezca al comité asignado
+        # a la convocatoria.
+        if (
+            request.user.rol
+            == Usuario.Rol.COMITE
             and not request.user.is_superuser
         ):
             pertenece = Comite.objects.filter(
@@ -119,8 +194,7 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-        # Evita registrar dos evaluaciones del mismo usuario
-        # para una misma solicitud.
+        # Evitar evaluación duplicada.
         if Evaluacion.objects.filter(
             solicitud=solicitud,
             evaluador=request.user,
@@ -138,7 +212,9 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         evaluacion = Evaluacion.objects.create(
             solicitud=solicitud,
             evaluador=request.user,
-            puntaje=serializer.validated_data["puntaje"],
+            puntaje=serializer.validated_data[
+                "puntaje"
+            ],
             comentario=serializer.validated_data.get(
                 "comentario",
                 "",
@@ -146,44 +222,94 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
         )
 
         return Response(
-            self.get_serializer(evaluacion).data,
+            self.get_serializer(
+                evaluacion
+            ).data,
             status=status.HTTP_201_CREATED,
         )
 
     @action(
         detail=False,
         methods=["get"],
-        url_path="puntaje-final/(?P<solicitud_id>[^/.]+)",
+        url_path=(
+            "puntaje-final/"
+            "(?P<solicitud_id>[^/.]+)"
+        ),
     )
-    def puntaje_final(self, request, solicitud_id=None):
+    def puntaje_final(
+        self,
+        request,
+        solicitud_id=None,
+    ):
         """
-        Calcula el puntaje final utilizando Factory + Strategy.
+        Calcula el puntaje final utilizando
+        Factory + Strategy.
         """
 
+        try:
+            solicitud = (
+                Solicitud.objects
+                .select_related(
+                    "convocatoria"
+                )
+                .get(
+                    pk=solicitud_id
+                )
+            )
+
+        except Solicitud.DoesNotExist:
+            return Response(
+                {
+                    "detail": (
+                        "La solicitud no existe."
+                    )
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Comité:
+        # solo puede calcular el puntaje de
+        # convocatorias a las que pertenece.
+        if (
+            request.user.rol
+            == Usuario.Rol.COMITE
+            and not request.user.is_superuser
+        ):
+            pertenece = Comite.objects.filter(
+                convocatoria=solicitud.convocatoria,
+                integrantes=request.user,
+            ).exists()
+
+            if not pertenece:
+                return Response(
+                    {
+                        "detail": (
+                            "No tiene acceso a esta "
+                            "solicitud."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         evaluaciones = Evaluacion.objects.filter(
-            solicitud_id=solicitud_id
-        ).select_related(
-            "solicitud__convocatoria"
+            solicitud=solicitud
         )
 
         if not evaluaciones.exists():
             return Response(
                 {
                     "detail": (
-                        "La solicitud no tiene evaluaciones "
-                        "registradas."
+                        "La solicitud no tiene "
+                        "evaluaciones registradas."
                     )
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        tipo_beca = (
-            evaluaciones.first()
-            .solicitud.convocatoria.tipo_beca
-        )
-
-        estrategia = EstrategiaEvaluacionFactory.crear(
-            tipo_beca
+        estrategia = (
+            EstrategiaEvaluacionFactory.crear(
+                solicitud.convocatoria.tipo_beca
+            )
         )
 
         puntajes = [
@@ -191,14 +317,24 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
             for evaluacion in evaluaciones
         ]
 
-        resultado = estrategia.calcular_puntaje_final(
-            puntajes
+        resultado = (
+            estrategia.calcular_puntaje_final(
+                puntajes
+            )
         )
 
         return Response(
             {
-                "solicitud_id": solicitud_id,
+                "solicitud_id": solicitud.id,
                 "puntaje_final": resultado,
-                "estrategia": estrategia.__class__.__name__,
-            }
+                "cantidad_evaluaciones": (
+                    evaluaciones.count()
+                ),
+                "estrategia": (
+                    estrategia
+                    .__class__
+                    .__name__
+                ),
+            },
+            status=status.HTTP_200_OK,
         )
