@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Registro de estudiante | PNGIB{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <h1>Crea tu cuenta</h1>
+    <p class="texto-secundario">Regístrate para empezar a aplicar a becas.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Crear cuenta</button>
+    </form>
+
+    <p class="enlace-secundario">
+        ¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión</a>
+    </p>
+</div>
+{% endblock %}
