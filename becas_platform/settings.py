@@ -34,20 +34,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    # Librerías de terceros
+    
+   
     "rest_framework",
 
-    # Apps del dominio (una por bounded context)
+  
     "apps.usuarios",
     "apps.convocatorias",
     "apps.solicitudes",
     "apps.evaluaciones",
+    'apps.paginas',
 ]
 
-# Usuario propio del sistema: reemplaza al User estándar de Django para
-# poder guardar DPI, teléfono, dirección y rol directamente sobre el
-# usuario (ver apps/usuarios/models.py).
+
 AUTH_USER_MODEL = "usuarios.Usuario"
 
 MIDDLEWARE = [
@@ -80,12 +79,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "becas_platform.wsgi.application"
 
 
-# ---------------------------------------------------------------------------
-# Base de datos
-# Por defecto usa SQLite (cero configuración, ideal para desarrollar rápido).
-# Para usar MySQL: crear un archivo .env (ver .env.example) con
-# DB_ENGINE=mysql y las credenciales, e instalar mysqlclient.
-# ---------------------------------------------------------------------------
+
 if os.environ.get("DB_ENGINE") == "mysql":
     DATABASES = {
         "default": {
@@ -120,10 +114,20 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+# Esta línea le dice a Django que busque CSS/JS en la carpeta static de la raíz:
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Autenticación: a dónde ir en cada caso
+LOGIN_URL = "usuarios:login"
+LOGIN_REDIRECT_URL = "usuarios:panel"
+LOGOUT_REDIRECT_URL = "usuarios:login"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
