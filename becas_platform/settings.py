@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.convocatorias",
     "apps.solicitudes",
     "apps.evaluaciones",
+    "apps.paginas",
 ]
 
 # Usuario propio del sistema: reemplaza al User estándar de Django para
@@ -141,11 +142,16 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
+LOGIN_URL = "usuarios:login"
+LOGIN_REDIRECT_URL = "usuarios:panel"
+LOGOUT_REDIRECT_URL = "usuarios:login"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titulo %}Iniciar sesión | PNGIB{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <h1>Iniciar sesión</h1>
+    <p class="texto-secundario">Ingresa con tu correo y contraseña.</p>
+
+    {% if form.errors %}
+        <div class="mensaje mensaje-error">
+            Correo o contraseña incorrectos. Intenta de nuevo.
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Entrar</button>
+    </form>
+
+    <p class="enlace-secundario">
+        ¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a>
+    </p>
+</div>
+{% endblock %}
