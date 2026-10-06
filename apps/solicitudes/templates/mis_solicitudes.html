@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="font-weight-bold">Mis Solicitudes de Beca</h2>
+        <a href="{% url 'convocatorias:lista' %}" class="btn btn-outline-primary btn-sm">
+            + Ver convocatorias
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        {% for solicitud in solicitudes %}
+            <div class="col-md-6 mb-4">
+                <div class="tarjeta p-4 shadow-sm border rounded bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h4 class="m-0 font-weight-bold h5">
+                            {{ solicitud.convocatoria.nombre }}
+                        </h4>
+                        <span class="badge badge-verde">
+                            {{ solicitud.estado|default:"ENVIADA" }}
+                        </span>
+                    </div>
+                    
+                    {% if solicitud.motivo %}
+                        <p class="text-secondary small my-3">
+                            <strong>Motivo presentado:</strong><br>
+                            {{ solicitud.motivo|truncatewords:20 }}
+                        </p>
+                    {% endif %}
+
+                    <div class="pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
+                        <span><strong>Código Solicitud:</strong> #{{ solicitud.id }}</span>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="tarjeta text-center p-5 border rounded bg-light">
+                    <h4 class="text-muted mb-2">Aún no has postulado a ninguna beca</h4>
+                    <p class="text-secondary small mb-3">
+                        Explora las convocatorias activas y envía tu primera solicitud.
+                    </p>
+                    <a href="{% url 'convocatorias:lista' %}" class="btn btn-primary btn-sm">
+                        Ver Convocatorias
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

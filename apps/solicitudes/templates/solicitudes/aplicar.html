@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded p-4 bg-white">
+                <div class="border-bottom pb-3 mb-4">
+                    <span class="badge badge-verde mb-2">Convocatoria Activa</span>
+                    <h2 class="h3 font-weight-bold text-dark m-0">{{ convocatoria.nombre }}</h2>
+                    <p class="text-muted mt-2 mb-0">
+                        {{ convocatoria.descripcion|default:"Completa el formulario a continuación para postularte a esta beca." }}
+                    </p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="form-group mb-3">
+                            <label for="{{ field.id_for_label }}" class="font-weight-bold text-secondary mb-1">
+                                {{ field.label }}
+                            </label>
+                            
+                            {# Renderizado automático del campo #}
+                            <div class="form-control-wrapper">
+                                {{ field }}
+                            </div>
+
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">⚠️ {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <a href="{% url 'convocatorias:lista' %}" class="btn btn-outline-secondary">
+                            ← Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            Enviar Solicitud
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

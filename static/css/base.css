@@ -282,3 +282,20 @@ input:focus, select:focus, textarea:focus {
     .navbar { flex-direction: column; align-items: flex-start; gap: 10px; }
     .navbar nav { width: 100%; justify-content: space-between; }
 }
+
+/* ---------- Badges de estado (Panel del Estudiante) ---------- */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+}
+
+.badge-gris { background: #e5e5ea; color: #48484a; }
+.badge-amarillo { background: #fef3cd; color: #946200; }
+.badge-verde { background: var(--color-success-bg); color: var(--color-success-text); }
+.badge-rojo { background: var(--color-error-bg); color: var(--color-error-text); }

@@ -15,6 +15,10 @@
     <nav>
         <a href="{% url 'como_funciona' %}">Cómo funciona</a>
         {% if user.is_authenticated %}
+            {% if user.rol == "ESTUDIANTE" %}
+                <a href="{% url 'convocatorias:lista' %}">Convocatorias</a>
+                <a href="{% url 'solicitudes:panel_estudiante' %}">Mis solicitudes</a>
+            {% endif %}
             <a href="{% url 'usuarios:panel' %}">Mi panel</a>
             <form method="post" action="{% url 'usuarios:logout' %}" style="display:inline;">
                 {% csrf_token %}
@@ -43,5 +47,6 @@
     Plataforma Nacional para la Gestión Integral de Becas — Ministerio de Educación
 </footer>
 
+{% block js_extra %}{% endblock %}
 </body>
 </html>

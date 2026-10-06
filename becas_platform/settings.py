@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 
     # Apps del dominio (una por bounded context)
     "apps.usuarios",
+   
     "apps.convocatorias",
     "apps.solicitudes",
     "apps.evaluaciones",
@@ -160,3 +161,11 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+# Configuración de archivos estáticos
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Configuración de redirecciones de autenticación
+LOGIN_URL = "usuarios:login"
+LOGIN_REDIRECT_URL = "usuarios:panel"
+LOGOUT_REDIRECT_URL = "usuarios:login"
