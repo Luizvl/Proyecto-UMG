@@ -299,3 +299,147 @@ input:focus, select:focus, textarea:focus {
 .badge-amarillo { background: #fef3cd; color: #946200; }
 .badge-verde { background: var(--color-success-bg); color: var(--color-success-text); }
 .badge-rojo { background: var(--color-error-bg); color: var(--color-error-text); }
+
+
+
+
+
+
+
+
+
+/* ============================================================
+   Página de inicio — rediseño (Byron)
+   ============================================================ */
+
+:root {
+    --color-bg: #f7f9fe;
+    --font-sistema: "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* ---- Barra superior más grande ---- */
+.navbar { padding: 18px clamp(16px, 4vw, 64px); }
+.navbar .marca { font-size: 24px; font-weight: 800; color: #0f1b3d; }
+.navbar nav { gap: 32px; }
+.navbar nav a, .navbar nav button { font-size: 16px; font-weight: 500; }
+.navbar nav a.boton-primario {
+    background: var(--color-primary);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* ---- Contenedor más ancho solo en la página de inicio ---- */
+.pagina:has(.hero-inicio) { max-width: 1600px; padding-top: 48px; }
+
+.hero-inicio {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 24px;
+    align-items: end;
+}
+
+/* Capa de arriba: texto y tarjetas */
+.hero-texto {
+    position: relative;
+    z-index: 2;
+}
+
+/* Capa de abajo: la imagen, metida hacia la izquierda */
+.hero-imagen {
+    position: relative;
+    z-index: 1;
+    margin-left: -16%;
+}
+
+.etiqueta {
+    display: inline-block;
+    background: #e8f0fe;
+    color: #1d4ed8;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    margin-bottom: 24px;
+}
+
+.hero-inicio h1 {
+    font-size: clamp(40px, 4.6vw, 68px);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f1b3d;
+    margin-bottom: 24px;
+}
+
+.resaltado { color: #1d4ed8; }
+
+.hero-subtitulo {
+    font-size: clamp(17px, 1.6vw, 22px);
+    color: #5b6478;
+    max-width: 640px;
+    margin: 0 0 36px;
+}
+
+.hero-acciones { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 44px; }
+
+.boton-grande { padding: 18px 40px; font-size: 18px; border-radius: 14px; }
+.boton-secundario.boton-grande { background: #fff; padding: 17px 40px; }
+
+/* Imagen: bordes izquierdo y derecho difuminados para que no se vea el corte */
+.hero-imagen img {
+    width: 100%;
+    height: auto;
+    display: block;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 88%, transparent 100%);
+            mask-image: linear-gradient(to right, #000 0, #000 88%, transparent 100%);
+}
+
+/* ---- Tarjetas de beneficios ---- */
+.beneficios {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-right: -140px;
+}
+
+.beneficio {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 6px 28px rgba(15, 27, 61, 0.07);
+}
+.beneficio h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; color: #0f1b3d; }
+.beneficio p  { font-size: 14px; color: #5b6478; margin: 0; line-height: 1.5; }
+
+.beneficio-icono {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+.beneficio-icono svg { width: 22px; height: 22px; }
+
+.icono-azul  { background: #e8f0fe; color: #1d4ed8; }
+.icono-verde { background: #e6f6ef; color: #16a34a; }
+.icono-ambar { background: #fff4e0; color: #d97706; }
+
+/* ---- Paso a paso ---- */
+.paso-a-paso { text-align: center; margin-top: 96px; }
+.paso-a-paso .etiqueta { text-transform: uppercase; font-size: 13px; letter-spacing: 0.04em; }
+.paso-a-paso h2 { font-size: clamp(28px, 3vw, 40px); font-weight: 800; color: #0f1b3d; }
+.paso-a-paso .pasos { text-align: left; }
+
+/* ---- Celular y tablet: una sola columna ---- */
+@media (max-width: 1000px) {
+    .hero-inicio { grid-template-columns: 1fr; }
+    .beneficios  { grid-template-columns: 1fr; margin-right: 0; }
+    .hero-imagen { margin-left: 0; }
+}

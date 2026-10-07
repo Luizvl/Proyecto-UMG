@@ -1,20 +1,83 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Inicio | PNGIB{% endblock %}
 
 {% block contenido %}
-<section class="hero">
-    <h1>Tu beca, de principio a fin, en un solo lugar</h1>
-    <p>
-        Aplica a convocatorias, sube tus documentos y sigue el estado de tu
-        solicitud sin filas ni papeleo perdido.
-    </p>
-    <div class="acciones">
-        {% if user.is_authenticated %}
-            <a href="{% url 'usuarios:panel' %}" class="boton-primario">Ir a mi panel</a>
-        {% else %}
-            <a href="{% url 'usuarios:registro' %}" class="boton-primario">Crear mi cuenta</a>
-            <a href="{% url 'usuarios:login' %}" class="boton-secundario">Ya tengo cuenta</a>
-        {% endif %}
+
+<!-- ===== HERO: dos columnas (texto a la izquierda, imagen a la derecha) ===== -->
+<section class="hero-inicio">
+
+    <div class="hero-texto">
+        <span class="etiqueta">Tu futuro empieza aquí</span>
+
+        <h1><span class="resaltado">Tu beca</span>, de principio a fin, en un solo lugar</h1>
+
+        <p class="hero-subtitulo">
+            Aplica a convocatorias, sube tus documentos y sigue el estado de tu
+            solicitud de forma fácil, segura y sin filas.
+        </p>
+
+        <div class="hero-acciones">
+            {% if user.is_authenticated %}
+                <a href="{% url 'usuarios:panel' %}" class="boton-primario boton-grande">Ir a mi panel &rarr;</a>
+            {% else %}
+                <a href="{% url 'usuarios:registro' %}" class="boton-primario boton-grande">Crear mi cuenta &rarr;</a>
+                <a href="{% url 'usuarios:login' %}" class="boton-secundario boton-grande">Ya tengo cuenta</a>
+            {% endif %}
+        </div>
+
+        <!-- Tarjetas de beneficios -->
+        <div class="beneficios">
+            <article class="beneficio">
+                <div class="beneficio-icono icono-azul">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>
+                </div>
+                <div>
+                    <h3>Proceso 100% digital</h3>
+                    <p>Realiza todo en línea, sin filas ni papeleo.</p>
+                </div>
+            </article>
+
+            <article class="beneficio">
+                <div class="beneficio-icono icono-verde">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20v-6M12 20V8M18 20V4"/></svg>
+                </div>
+                <div>
+                    <h3>Seguimiento en tiempo real</h3>
+                    <p>Conoce el estado de tu solicitud desde tu panel.</p>
+                </div>
+            </article>
+
+            <article class="beneficio">
+                <div class="beneficio-icono icono-ambar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                </div>
+                <div>
+                    <h3>Convocatorias activas</h3>
+                    <p>Encuentra las becas disponibles para tu nivel académico.</p>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div class="hero-imagen">
+        <img src="{% static 'img/hero-estudiante.png' %}"
+             alt="Estudiante sonriendo con sus cuadernos junto al estado de su solicitud de beca">
     </div>
 </section>
+
+<!-- ===== PASO A PASO ===== -->
+<section class="paso-a-paso">
+    <span class="etiqueta">Paso a paso</span>
+    <h2>¿Cómo funciona el proceso de becas?</h2>
+    <p class="texto-secundario">Cuatro pasos, desde que te registras hasta que conoces el resultado de tu solicitud.</p>
+
+    <div class="pasos">
+        <div class="paso"><div class="numero">1</div><h3>Crea tu cuenta</h3><p class="texto-secundario">Regístrate con tu DPI y correo. Solo lo haces una vez.</p></div>
+        <div class="paso"><div class="numero">2</div><h3>Elige una convocatoria</h3><p class="texto-secundario">Consulta las becas activas para tu nivel académico y aplica.</p></div>
+        <div class="paso"><div class="numero">3</div><h3>Sube tus documentos</h3><p class="texto-secundario">Adjunta tu DPI, constancia de estudios e historial de notas.</p></div>
+        <div class="paso"><div class="numero">4</div><h3>Sigue tu resultado</h3><p class="texto-secundario">Un comité evalúa tu solicitud y ves el estado actualizado.</p></div>
+    </div>
+</section>
+
 {% endblock %}
