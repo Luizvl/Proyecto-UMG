@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}PNGIB{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block css_extra %}{% endblock %}
+</head>
+<body>
+
+<header class="navbar">
+    <a href="{% url 'inicio' %}" class="marca">PNGIB</a>
+    <nav>
+        <a href="{% url 'como_funciona' %}">Cómo funciona</a>
+        {% if user.is_authenticated %}
+            {% if user.rol == "ESTUDIANTE" %}
+                <a href="{% url 'convocatorias:lista' %}">Convocatorias</a>
+                <a href="{% url 'solicitudes:panel_estudiante' %}">Mis solicitudes</a>
+            {% endif %}
+            <a href="{% url 'usuarios:panel' %}">Mi panel</a>
+            <form method="post" action="{% url 'usuarios:logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        {% else %}
+            <a href="{% url 'usuarios:login' %}">Iniciar sesión</a>
+            <a href="{% url 'usuarios:registro' %}" class="boton-primario">Registrarme</a>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="pagina">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mensaje{% if message.tags == 'error' %} mensaje-error{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block contenido %}{% endblock %}
+</main>
+
+<footer class="footer">
+    Plataforma Nacional para la Gestión Integral de Becas — Ministerio de Educación
+</footer>
+
+{% block js_extra %}{% endblock %}
+</body>
+</html>

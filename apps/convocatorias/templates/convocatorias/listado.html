@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="font-weight-bold">Convocatorias Disponibles</h2>
+        <span class="badge badge-verde">Total: {{ convocatorias|length }}</span>
+    </div>
+
+    <div class="row">
+        {% for convocatoria in convocatorias %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="tarjeta p-4 shadow-sm border rounded bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h4 class="m-0 font-weight-bold h5">{{ convocatoria.nombre }}</h4>
+                        <span class="badge badge-verde">{{ convocatoria.estado }}</span>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">
+                        {{ convocatoria.descripcion|default:"Sin descripción disponible."|truncatewords:20 }}
+                    </p>
+                    
+                    <div class="mb-3 text-secondary small">
+                        <div><strong>Cupos disponibles:</strong> {{ convocatoria.cupo }}</div>
+                    </div>
+
+                    <div class="mt-3">
+                        {% if convocatoria.id in aplicadas_ids %}
+                            <button class="btn btn-secondary btn-block w-100" disabled>✓ Ya has aplicado</button>
+                        {% else %}
+                            <a href="{% url 'solicitudes:aplicar' convocatoria.id %}" class="btn btn-primary btn-block w-100">
+                                Aplicar a esta beca
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="tarjeta text-center p-5 border rounded bg-light">
+                    <h4 class="text-muted mb-2">No se encontraron convocatorias activas</h4>
+                    <p class="text-secondary small mb-3">
+                        Para habilitar postulaciones, crea una convocatoria desde el panel de administración.
+                    </p>
+                    <a href="/admin/convocatorias/convocatoria/add/" target="_blank" class="btn btn-outline-primary btn-sm">
+                        + Crear convocatoria en Admin
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

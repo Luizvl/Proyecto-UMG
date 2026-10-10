@@ -1,0 +1,301 @@
+/* ============================================================
+   Sistema de diseño — Plataforma Nacional de Becas
+   Inspirado en principios de Apple: mucho espacio en blanco,
+   tipografía como protagonista, poco ruido visual, jerarquía clara.
+   ============================================================ */
+
+:root {
+    --color-bg: #f5f5f7;
+    --color-surface: #ffffff;
+    --color-text: #1d1d1f;
+    --color-text-secondary: #6e6e73;
+    --color-border: #d2d2d7;
+
+    --color-primary: #1f3864;
+    --color-primary-hover: #16294d;
+
+    --color-success-bg: #e6f4ea;
+    --color-success-text: #1e7e34;
+    --color-error-bg: #fdecea;
+    --color-error-text: #c00000;
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06);
+    --shadow-nav: 0 1px 0 rgba(0, 0, 0, 0.06);
+
+    --font-sistema: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+
+    --max-ancho: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sistema);
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px 0;
+}
+
+h1 { font-size: clamp(28px, 5vw, 40px); }
+h2 { font-size: clamp(22px, 4vw, 28px); }
+
+p { line-height: 1.5; color: var(--color-text); }
+
+.texto-secundario { color: var(--color-text-secondary); }
+
+/* ---------- Barra de navegación (estilo "frosted glass") ---------- */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px clamp(16px, 4vw, 48px);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    box-shadow: var(--shadow-nav);
+}
+
+.navbar .marca {
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.navbar nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.navbar nav a, .navbar nav button {
+    font-size: 14px;
+    color: var(--color-text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.navbar .boton-primario { padding: 8px 16px; }
+
+/* ---------- Contenedor general ---------- */
+.pagina {
+    flex: 1;
+    width: 100%;
+    max-width: var(--max-ancho);
+    margin: 0 auto;
+    padding: clamp(24px, 5vw, 64px) clamp(16px, 4vw, 48px);
+}
+
+/* ---------- Tarjetas (formularios, paneles) ---------- */
+.tarjeta {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: clamp(24px, 5vw, 40px);
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.tarjeta-ancha {
+    max-width: 720px;
+}
+
+/* ---------- Formularios ---------- */
+form p { margin: 0 0 18px 0; }
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(31, 56, 100, 0.15);
+}
+
+/* ---------- Botones ---------- */
+.boton-primario, button[type="submit"] {
+    display: inline-block;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.boton-primario:hover, button[type="submit"]:hover {
+    background-color: var(--color-primary-hover);
+    text-decoration: none;
+}
+
+.boton-primario:active, button[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+.boton-secundario {
+    display: inline-block;
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 11px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.boton-secundario:hover {
+    border-color: var(--color-primary);
+    text-decoration: none;
+}
+
+/* ---------- Mensajes ---------- */
+.mensaje {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 18px;
+    font-size: 14px;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
+}
+
+.mensaje-error {
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
+}
+
+.enlace-secundario {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- Sección "hero" de la página de inicio ---------- */
+.hero {
+    text-align: center;
+    padding: clamp(40px, 8vw, 96px) 16px;
+}
+
+.hero p {
+    max-width: 560px;
+    margin: 12px auto 28px auto;
+    color: var(--color-text-secondary);
+    font-size: clamp(16px, 2vw, 19px);
+}
+
+.hero .acciones {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ---------- Cuadrícula de pasos (Cómo funciona) ---------- */
+.pasos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.paso {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+}
+
+.paso .numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+    text-align: center;
+    padding: 24px 16px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- Responsive: navegación en móvil ---------- */
+@media (max-width: 560px) {
+    .navbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .navbar nav { width: 100%; justify-content: space-between; }
+}
+
+/* ---------- Badges de estado (Panel del Estudiante) ---------- */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+}
+
+.badge-gris { background: #e5e5ea; color: #48484a; }
+.badge-amarillo { background: #fef3cd; color: #946200; }
+.badge-verde { background: var(--color-success-bg); color: var(--color-success-text); }
+.badge-rojo { background: var(--color-error-bg); color: var(--color-error-text); }
