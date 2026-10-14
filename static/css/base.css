@@ -443,3 +443,194 @@ input:focus, select:focus, textarea:focus {
     .beneficios  { grid-template-columns: 1fr; margin-right: 0; }
     .hero-imagen { margin-left: 0; }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================================================
+   Página "Cómo funciona" — rediseño (Byron)
+   ============================================================ */
+
+.pagina:has(.cf-hero) { max-width: 1600px; padding-top: 40px; }
+/* Evita scroll horizontal sin recortar la onda (que ocupa todo el ancho) */
+html:has(.cf-hero), body:has(.cf-hero) { overflow-x: clip; }
+
+.etiqueta-mayus { text-transform: uppercase; font-size: 13px; letter-spacing: 0.04em; }
+
+/* ---- Hero: 2 columnas ---- */
+.cf-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 0;
+    align-items: end;
+}
+.cf-texto { position: relative; z-index: 2; }
+
+/* Onda de fondo: ocupa todo el ancho de la pantalla, detrás de tarjetas y foto */
+.cf-ola {
+    position: absolute;
+    z-index: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    height: 260px;
+    bottom: -70px;
+    pointer-events: none;
+}
+
+.cf-hero h1 {
+    font-size: clamp(38px, 4.4vw, 64px);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f1b3d;
+    margin-bottom: 16px;
+}
+.cf-subtitulo { font-size: clamp(16px, 1.5vw, 20px); color: #5b6478; margin: 0 0 40px; }
+
+/* ---- Las 4 tarjetas ---- */
+.cf-pasos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.cf-paso {
+    position: relative;               /* para posicionar el número encima */
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px 22px 28px;
+    box-shadow: 0 8px 30px rgba(15, 27, 61, 0.07);
+}
+
+/* Línea punteada que conecta una tarjeta con la siguiente */
+.cf-paso:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    right: -20px;
+    width: 20px;
+    border-top: 2px dashed #b9cbf5;
+}
+
+/* Círculo con el número, sobresale por arriba de la tarjeta */
+.cf-numero {
+    position: absolute;
+    top: -18px;
+    left: 20px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 12px rgba(15, 27, 61, 0.15);
+}
+.cf-num-azul   { background: #2563eb; }
+.cf-num-verde  { background: #10b981; }
+.cf-num-ambar  { background: #f5b301; }
+.cf-num-morado { background: #7c5cf0; }
+
+/* Alto fijo + object-fit: todas las ilustraciones ocupan lo mismo y los títulos quedan alineados */
+.cf-ilustracion {
+    display: block;
+    width: 100%;
+    height: 110px;
+    object-fit: contain;
+    margin: 14px auto 18px;
+}
+
+.cf-paso h3 { font-size: 18px; font-weight: 700; color: #0f1b3d; margin: 0 0 10px; }
+.cf-paso p  { font-size: 14px; line-height: 1.55; color: #5b6478; margin: 0; }
+
+/* ---- Ilustración de la derecha (capas) ---- */
+.cf-visual {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 1 / 1.05;           /* reserva el alto aunque las imágenes sean absolute */
+    margin-left: -12%;
+}
+.cf-visual img { position: absolute; display: block; }
+
+.cf-fondo {
+    width: 125%;
+    right: -14%;
+    top: 12%;
+    -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 50%, #000 55%, transparent 100%);
+            mask-image: radial-gradient(ellipse 62% 60% at 50% 50%, #000 55%, transparent 100%);
+    opacity: 0.95;
+}
+.cf-destellos  { width: 26%; left: 30%; top: 4%; }
+.cf-estudiante { width: 100%; left: 2%; bottom: 0; }
+
+.cf-flota { filter: drop-shadow(0 12px 24px rgba(15, 27, 61, 0.12)); }
+.cf-flota-doc     { width: 25%; left: -2%;  top: 30%; }
+.cf-flota-birrete { width: 34%; right: -6%; top: 0; }
+.cf-flota-check   { width: 15%; right: 2%;  top: 42%; }
+
+/* ---- Banner final ---- */
+.cf-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-top: 56px;
+    padding: 28px 48px 28px 300px;
+    border-radius: 24px;
+    background: linear-gradient(90deg, #eaf1fe 0%, #f3f7ff 60%, #eaf1fe 100%);
+    overflow: hidden;
+}
+.cf-banner-birrete { position: absolute; z-index: 1; left: 40px; top: 50%; transform: translateY(-50%); width: 200px; }
+.cf-banner-avion   { position: absolute; z-index: 1; right: 62px; top: 10%; width: 80px; }
+
+/* Adornos SVG del banner (detrás del contenido) */
+.cf-deco-izq, .cf-deco-der { position: absolute; z-index: 0; pointer-events: none; }
+.cf-deco-izq { left: 0;  bottom: 0; width: 320px; height: 150px; }
+.cf-deco-der { right: 0; top: 0;    width: 300px; height: 100%; }
+.cf-banner-texto, .cf-banner .boton-primario { position: relative; z-index: 1; }
+
+.cf-banner-texto { flex: 1; }
+.cf-banner-etiqueta {
+    font-size: 12px; font-weight: 700; color: #1d4ed8;
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cf-banner h2 { font-size: clamp(22px, 2.2vw, 30px); font-weight: 800; color: #0f1b3d; margin: 6px 0; }
+.cf-banner p  { margin: 0; color: #5b6478; }
+.cf-banner .boton-primario { margin-right: 140px; white-space: nowrap; }
+
+/* ---- Tablet ---- */
+@media (max-width: 1200px) {
+    .cf-hero  { grid-template-columns: 1fr; }
+    .cf-visual { max-width: 520px; margin: 32px auto 0; width: 100%; }
+}
+
+/* ---- Celular ---- */
+@media (max-width: 760px) {
+    .cf-pasos { grid-template-columns: 1fr 1fr; row-gap: 36px; }
+    .cf-paso::after { display: none; }
+    .cf-banner { flex-direction: column; align-items: flex-start; padding: 28px; }
+    .cf-banner-birrete, .cf-banner-avion, .cf-deco-izq, .cf-deco-der { display: none; }
+    .cf-banner .boton-primario { margin-right: 0; }
+}
+@media (max-width: 480px) {
+    .cf-pasos { grid-template-columns: 1fr; }
+}
+
+
+

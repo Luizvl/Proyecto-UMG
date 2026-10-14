@@ -1,32 +1,96 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Cómo funciona | PNGIB{% endblock %}
 
 {% block contenido %}
-<h2>¿Cómo funciona el proceso de becas?</h2>
-<p class="texto-secundario">
-    Cuatro pasos, desde que te registras hasta que conoces el resultado de tu solicitud.
-</p>
 
-<div class="pasos">
-    <div class="paso">
-        <div class="numero">1</div>
-        <h3>Crea tu cuenta</h3>
-        <p class="texto-secundario">Regístrate con tu DPI y correo. Solo lo haces una vez.</p>
+<!-- ===== HERO: texto + 4 pasos a la izquierda, ilustración a la derecha ===== -->
+<section class="cf-hero">
+
+    <!-- Onda decorativa de fondo (SVG): queda detrás de todo -->
+    <svg class="cf-ola" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 140 C 260 60, 520 60, 760 130 S 1200 230, 1440 120 L1440 260 L0 260 Z" fill="#eef3fd"/>
+        <path d="M0 190 C 300 120, 640 150, 900 200 S 1260 240, 1440 180 L1440 260 L0 260 Z" fill="#f7f9fe"/>
+    </svg>
+
+    <div class="cf-texto">
+        <span class="etiqueta etiqueta-mayus">Paso a paso</span>
+        <h1>¿Cómo funciona<br>el proceso de becas?</h1>
+        <p class="cf-subtitulo">
+            Cuatro pasos, desde que te registras hasta que conoces el resultado de tu solicitud.
+        </p>
+
+        <ol class="cf-pasos">
+            <li class="cf-paso">
+                <span class="cf-numero cf-num-azul">1</span>
+                <img src="{% static 'img/paso-1-cuenta.webp' %}" alt="" class="cf-ilustracion">
+                <h3>Crea tu cuenta</h3>
+                <p>Regístrate con tu DPI y correo. Solo lo haces una vez.</p>
+            </li>
+            <li class="cf-paso">
+                <span class="cf-numero cf-num-verde">2</span>
+                <img src="{% static 'img/paso-2-convocatoria.webp' %}" alt="" class="cf-ilustracion">
+                <h3>Elige una convocatoria</h3>
+                <p>Consulta las becas activas para tu nivel académico y aplica a la que te corresponda.</p>
+            </li>
+            <li class="cf-paso">
+                <span class="cf-numero cf-num-ambar">3</span>
+                <img src="{% static 'img/paso-3-documentos.webp' %}" alt="" class="cf-ilustracion">
+                <h3>Sube tus documentos</h3>
+                <p>Adjunta tu DPI, constancia de estudios e historial de notas desde tu panel.</p>
+            </li>
+            <li class="cf-paso">
+                <span class="cf-numero cf-num-morado">4</span>
+                <img src="{% static 'img/paso-4-resultado.webp' %}" alt="" class="cf-ilustracion">
+                <h3>Sigue tu resultado</h3>
+                <p>Un comité evalúa tu solicitud y verás el estado actualizado: pendiente, en evaluación, aprobada o rechazada.</p>
+            </li>
+        </ol>
     </div>
-    <div class="paso">
-        <div class="numero">2</div>
-        <h3>Elige una convocatoria</h3>
-        <p class="texto-secundario">Consulta las becas activas para tu nivel académico y aplica a la que te corresponda.</p>
+
+    <!-- Ilustración: varias capas encimadas con position: absolute -->
+    <div class="cf-visual" aria-hidden="true">
+        <img src="{% static 'img/fondo-campus.webp' %}"      alt="" class="cf-fondo">
+        <img src="{% static 'img/destellos.webp' %}"         alt="" class="cf-destellos">
+        <img src="{% static 'img/estudiante.webp' %}"        alt="" class="cf-estudiante">
+        <img src="{% static 'img/tarjeta-documento.webp' %}" alt="" class="cf-flota cf-flota-doc">
+        <img src="{% static 'img/tarjeta-birrete.webp' %}"   alt="" class="cf-flota cf-flota-birrete">
+        <img src="{% static 'img/check.webp' %}"             alt="" class="cf-flota cf-flota-check">
     </div>
-    <div class="paso">
-        <div class="numero">3</div>
-        <h3>Sube tus documentos</h3>
-        <p class="texto-secundario">Adjunta tu DPI, constancia de estudios e historial de notas desde tu panel.</p>
+</section>
+
+<!-- ===== BANNER FINAL: llamada a la acción ===== -->
+<section class="cf-banner">
+
+    <!-- Burbujas detrás del birrete -->
+    <svg class="cf-deco-izq" viewBox="0 0 320 150" aria-hidden="true">
+        <circle cx="60"  cy="130" r="70" fill="#dbe7fd"/>
+        <circle cx="230" cy="70"  r="22" fill="#c9dbfb"/>
+        <circle cx="270" cy="110" r="6"  fill="#9fbdf6"/>
+        <circle cx="200" cy="18"  r="5"  fill="#9fbdf6"/>
+    </svg>
+
+    <!-- Camino punteado del avión + burbujas de la derecha -->
+    <svg class="cf-deco-der" viewBox="0 0 300 150" aria-hidden="true">
+        <circle cx="270" cy="40"  r="48" fill="#dbe7fd"/>
+        <circle cx="205" cy="128" r="9"  fill="#fde7a8"/>
+        <path d="M120 150 C 128 118, 150 112, 168 124 S 196 126, 190 100 S 176 76, 172 70"
+              fill="none" stroke="#8fb0f2" stroke-width="2.5"
+              stroke-dasharray="7 7" stroke-linecap="round"/>
+    </svg>
+
+    <img src="{% static 'img/birrete.webp' %}" alt="" class="cf-banner-birrete">
+    <div class="cf-banner-texto">
+        <span class="cf-banner-etiqueta">Tu futuro empieza aquí</span>
+        <h2>¿Listo para iniciar tu solicitud?</h2>
+        <p>Crea tu cuenta y da el primer paso hacia una gran oportunidad.</p>
     </div>
-    <div class="paso">
-        <div class="numero">4</div>
-        <h3>Sigue tu resultado</h3>
-        <p class="texto-secundario">Un comité evalúa tu solicitud y verás el estado actualizado: pendiente, en evaluación, aprobada o rechazada.</p>
-    </div>
-</div>
+    {% if user.is_authenticated %}
+        <a href="{% url 'convocatorias:lista' %}" class="boton-primario boton-grande">Ver convocatorias &rarr;</a>
+    {% else %}
+        <a href="{% url 'usuarios:registro' %}" class="boton-primario boton-grande">Crear mi cuenta &rarr;</a>
+    {% endif %}
+    <img src="{% static 'img/avion-papel.webp' %}" alt="" class="cf-banner-avion">
+</section>
+
 {% endblock %}
