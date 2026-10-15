@@ -1,25 +1,95 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Iniciar sesión | PNGIB{% endblock %}
 
 {% block contenido %}
-<div class="tarjeta">
-    <h1>Iniciar sesión</h1>
-    <p class="texto-secundario">Ingresa con tu correo y contraseña.</p>
 
-    {% if form.errors %}
-        <div class="mensaje mensaje-error">
-            Correo o contraseña incorrectos. Intenta de nuevo.
-        </div>
-    {% endif %}
+<section class="login-pagina">
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Entrar</button>
-    </form>
+    <!-- ===== Tarjeta con el formulario ===== -->
+    <div class="login-tarjeta">
+        <h1>Iniciar sesión</h1>
+        <p class="auth-subtitulo">Accede a tu cuenta para continuar con tu solicitud de beca.</p>
 
-    <p class="enlace-secundario">
-        ¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a>
-    </p>
-</div>
+        {% if form.non_field_errors or form.errors %}
+            <div class="mensaje mensaje-error">Correo o contraseña incorrectos. Intenta de nuevo.</div>
+        {% endif %}
+
+        <form method="post" class="login-form" novalidate>
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+            <!-- Correo (Django lo llama "username" porque es el campo para identificarse) -->
+            <label for="{{ form.username.id_for_label }}">Correo electrónico:</label>
+            <div class="campo">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                <input type="email" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}"
+                       value="{{ form.username.value|default:'' }}" placeholder="tucorreo@ejemplo.com"
+                       autocomplete="email" required autofocus>
+            </div>
+
+            <!-- Contraseña con botón para mostrarla -->
+            <label for="{{ form.password.id_for_label }}">Contraseña:</label>
+            <div class="campo">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <input type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}"
+                       placeholder="••••••••" autocomplete="current-password" required>
+                <button type="button" class="campo-ojo" aria-label="Mostrar contraseña">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+
+            <a href="{% url 'usuarios:recuperar' %}" class="login-olvido">¿Olvidaste tu contraseña?</a>
+
+            <button type="submit" class="boton-primario boton-login">Entrar &rarr;</button>
+        </form>
+
+        <p class="login-registro">
+            <span>¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a></span>
+        </p>
+    </div>
+
+    <!-- ===== Ilustración: capas encimadas ===== -->
+    <div class="login-visual" aria-hidden="true">
+        <img src="{% static 'img/login-campus.webp' %}"         alt="" class="lv lv-campus">
+        <img src="{% static 'img/login-camino.webp' %}"         alt="" class="lv lv-camino">
+        <img src="{% static 'img/login-destellos.webp' %}"      alt="" class="lv lv-destellos">
+        <img src="{% static 'img/login-hojas.webp' %}"          alt="" class="lv lv-hojas">
+        <img src="{% static 'img/login-laptop.webp' %}"         alt="" class="lv lv-laptop">
+        <img src="{% static 'img/login-libros.webp' %}"         alt="" class="lv lv-libros lv-sombra">
+        <img src="{% static 'img/login-escudo.webp' %}"         alt="" class="lv lv-escudo lv-sombra">
+        <img src="{% static 'img/login-birrete.webp' %}"        alt="" class="lv lv-birrete lv-sombra">
+        <img src="{% static 'img/login-solicitud.webp' %}"      alt="" class="lv lv-solicitud lv-sombra">
+        <img src="{% static 'img/login-notificacion.webp' %}"   alt="" class="lv lv-notificacion lv-sombra">
+        <img src="{% static 'img/login-datos-seguros.webp' %}"  alt="" class="lv lv-datos lv-sombra">
+        <img src="{% static 'img/login-avion.webp' %}"          alt="" class="lv lv-avion">
+    </div>
+</section>
+
+<!-- ===== Banner final (reutiliza los estilos del de "Cómo funciona") ===== -->
+<section class="cf-banner">
+    <svg class="cf-deco-izq" viewBox="0 0 320 150" aria-hidden="true">
+        <circle cx="60"  cy="130" r="70" fill="#dbe7fd"/>
+        <circle cx="230" cy="70"  r="22" fill="#c9dbfb"/>
+        <circle cx="270" cy="110" r="6"  fill="#9fbdf6"/>
+        <circle cx="200" cy="18"  r="5"  fill="#9fbdf6"/>
+    </svg>
+    <svg class="cf-deco-der" viewBox="0 0 300 150" aria-hidden="true">
+        <circle cx="270" cy="40"  r="48" fill="#dbe7fd"/>
+        <circle cx="205" cy="128" r="9"  fill="#fde7a8"/>
+        <path d="M120 150 C 128 118, 150 112, 168 124 S 196 126, 190 100 S 176 76, 172 70"
+              fill="none" stroke="#8fb0f2" stroke-width="2.5" stroke-dasharray="7 7" stroke-linecap="round"/>
+    </svg>
+    <img src="{% static 'img/birrete.webp' %}" alt="" class="cf-banner-birrete">
+    <div class="cf-banner-texto">
+        <span class="cf-banner-etiqueta">Tu futuro empieza aquí</span>
+        <h2>Accede a tu panel y continúa tu proceso</h2>
+        <p>Revisa el estado de tu solicitud, sube documentos y mantente al día.</p>
+    </div>
+    <a href="{% url 'como_funciona' %}" class="boton-primario boton-grande">Conoce cómo funciona &rarr;</a>
+    <img src="{% static 'img/avion-papel.webp' %}" alt="" class="cf-banner-avion">
+</section>
+
 {% endblock %}
+
+{% block js_extra %}{% include "usuarios/_ojo_contrasena.html" %}{% endblock %}

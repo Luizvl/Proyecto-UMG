@@ -1,19 +1,332 @@
 {% extends "base.html" %}
-{% block titulo %}Registro de estudiante | PNGIB{% endblock %}
+{% load static %}
+{% block titulo %}Crea tu cuenta | PNGIB{% endblock %}
 
 {% block contenido %}
-<div class="tarjeta">
-    <h1>Crea tu cuenta</h1>
-    <p class="texto-secundario">Regístrate para empezar a aplicar a becas.</p>
+<section class="reg-pagina">
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Crear cuenta</button>
-    </form>
+    <!-- ===== Columna izquierda: mensaje + ilustración ===== -->
+    <div class="reg-intro">
+        <span class="etiqueta etiqueta-mayus">Registro rápido</span>
+        <h1><span class="resaltado">Crea tu cuenta</span> y comienza tu camino a una beca</h1>
+        <p class="reg-subtitulo">
+            Regístrate en pocos minutos, completa tu perfil y empieza a aplicar a las convocatorias disponibles en PNGIB.
+        </p>
+    </div>
 
-    <p class="enlace-secundario">
-        ¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión</a>
-    </p>
+    <div class="reg-visual" aria-hidden="true">
+        <img src="{% static 'img/login-campus.webp' %}"    alt="" class="rv rv-campus">
+        <img src="{% static 'img/login-camino.webp' %}"    alt="" class="rv rv-camino">
+        <!-- Tarjeta de DPI dibujada con HTML/CSS -->
+        <div class="rv rv-dpi">
+            <span class="rv-dpi-foto">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/></svg>
+            </span>
+            <strong>DPI</strong>
+            <i></i><i></i><i></i>
+        </div>
+        <img src="{% static 'img/login-birrete.webp' %}"   alt="" class="rv rv-birrete rv-sombra">
+        <img src="{% static 'img/login-solicitud.webp' %}" alt="" class="rv rv-solicitud rv-sombra">
+        <img src="{% static 'img/login-escudo.webp' %}"    alt="" class="rv rv-escudo rv-sombra">
+        <img src="{% static 'img/login-destellos.webp' %}" alt="" class="rv rv-destellos">
+        <img src="{% static 'img/login-avion.webp' %}"     alt="" class="rv rv-avion">
+        <span class="rv rv-burbuja rv-b1"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="3.5" height="8" rx="1"/><rect x="10.25" y="7" width="3.5" height="13" rx="1"/><rect x="16.5" y="4" width="3.5" height="16" rx="1"/></svg></span>
+        <span class="rv rv-burbuja rv-b2"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><rect x="8" y="12" width="8" height="1.8" rx=".9" fill="#fff"/><rect x="8" y="15.5" width="6" height="1.8" rx=".9" fill="#fff"/></svg></span>
+        <span class="rv rv-burbuja rv-b3"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4 1 9l11 5 9-4.1V16h2V9z"/><path d="M5 12.5V16c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.5l-7 3.2z"/></svg></span>
+    </div>
+
+    <!-- ===== Beneficios ===== -->
+    <div class="beneficios reg-beneficios">
+        <article class="beneficio">
+            <div class="beneficio-icono icono-azul"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/><path d="m8.5 12 2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><h3>Proceso seguro</h3><p>Tus datos están protegidos y son confidenciales.</p></div>
+        </article>
+        <article class="beneficio">
+            <div class="beneficio-icono icono-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div><h3>Registro en minutos</h3><p>Crea tu cuenta de forma rápida y sencilla.</p></div>
+        </article>
+        <article class="beneficio">
+            <div class="beneficio-icono icono-ambar"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="8" width="8" height="1.8" rx=".9" fill="#fff"/><rect x="8" y="12" width="8" height="1.8" rx=".9" fill="#fff"/><rect x="8" y="16" width="5" height="1.8" rx=".9" fill="#fff"/></svg></div>
+            <div><h3>Aplica a convocatorias activas</h3><p>Completa tu perfil y encuentra becas según tu nivel académico.</p></div>
+        </article>
+    </div>
+
+    <!-- ===== Columna derecha: formulario ===== -->
+    <div class="reg-tarjeta">
+        <h2>Crea tu cuenta</h2>
+        <p class="auth-subtitulo">Regístrate para empezar a aplicar a becas.</p>
+
+        {% with errores=form.errores_amigables %}
+        {% if errores %}
+        <!-- ===== Ventana flotante de errores ===== -->
+        <div class="globo-error" role="alertdialog" aria-labelledby="globo-titulo" data-globo>
+            <button type="button" class="globo-cerrar" aria-label="Cerrar" data-globo-cerrar>&times;</button>
+            <span class="globo-icono" aria-hidden="true">!</span>
+            {% if errores|length == 1 %}
+                {% with e=errores.0 %}
+                <div class="globo-uno" data-item="{{ e.campo }}">
+                    <strong id="globo-titulo">{{ e.titulo }}</strong>
+                    <p>{{ e.texto }}</p>
+                    {% if e.ayuda %}<a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a>{% endif %}
+                </div>
+                {% endwith %}
+            {% else %}
+                <strong id="globo-titulo">Revisa <span data-globo-total>{{ errores|length }}</span> campos</strong>
+                <ul class="globo-lista">
+                    {% for e in errores %}
+                    <li data-item="{{ e.campo }}">
+                        <button type="button" data-ir="{{ e.campo }}">
+                            <b>{{ e.titulo }}</b>
+                            <span>{{ e.texto }}</span>
+                        </button>
+                        {% if e.ayuda %}<a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="post" class="login-form reg-form" novalidate>
+            {% csrf_token %}
+
+            <div class="reg-fila">
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}">Nombres</label>
+                    <div class="campo {% if form.first_name.errors %}campo-error{% endif %}">
+                        <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                        <input type="text" name="{{ form.first_name.html_name }}" id="{{ form.first_name.id_for_label }}"
+                               value="{{ form.first_name.value|default:'' }}" placeholder="Enrique" autocomplete="given-name" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}">Apellidos</label>
+                    <div class="campo {% if form.last_name.errors %}campo-error{% endif %}">
+                        <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                        <input type="text" name="{{ form.last_name.html_name }}" id="{{ form.last_name.id_for_label }}"
+                               value="{{ form.last_name.value|default:'' }}" placeholder="Pérez Gómez" autocomplete="family-name" required>
+                    </div>
+                </div>
+            </div>
+
+            <label for="{{ form.dpi.id_for_label }}">DPI</label>
+            <div class="campo {% if form.dpi.errors %}campo-error{% endif %}">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16a3 3 0 0 1 6 0M14 10h4.5M14 13.5h3"/></svg>
+                <input type="text" name="{{ form.dpi.html_name }}" id="{{ form.dpi.id_for_label }}"
+                       value="{{ form.dpi.value|default:'' }}" placeholder="1234 56789 0101"
+                       inputmode="numeric" maxlength="15" data-dpi required>
+                <span class="campo-contador" data-dpi-contador>0/13</span>
+            </div>
+
+            <label for="{{ form.email.id_for_label }}">Correo electrónico</label>
+            <div class="campo {% if form.email.errors %}campo-error{% endif %}">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+                       value="{{ form.email.value|default:'' }}" placeholder="tucorreo@ejemplo.com" autocomplete="email" required>
+            </div>
+
+            <label for="{{ form.nivel_academico.id_for_label }}">Nivel académico</label>
+            <div class="campo campo-select {% if form.nivel_academico.errors %}campo-error{% endif %}">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 1 9l11 5 11-5z"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>
+                <select name="{{ form.nivel_academico.html_name }}" id="{{ form.nivel_academico.id_for_label }}">
+                    {% for valor, texto in form.nivel_academico.field.choices %}
+                        <option value="{{ valor }}" {% if form.nivel_academico.value == valor %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+            <div class="campo {% if form.password1.errors or form.password2.errors %}campo-error{% endif %}">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <input type="password" name="{{ form.password1.html_name }}" id="{{ form.password1.id_for_label }}"
+                       placeholder="••••••••" autocomplete="new-password" data-clave required>
+                <button type="button" class="campo-ojo" aria-label="Mostrar contraseña">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+
+            <!-- Requisitos que se marcan en verde mientras escribes -->
+            <ul class="reg-requisitos" aria-live="polite">
+                <li data-req="largo">Al menos 8 caracteres</li>
+                <li data-req="letra">Al menos una letra (no solo números)</li>
+                <li data-req="igual">Las dos contraseñas coinciden</li>
+            </ul>
+
+            <label for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
+            <div class="campo {% if form.password2.errors %}campo-error{% endif %}">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <input type="password" name="{{ form.password2.html_name }}" id="{{ form.password2.id_for_label }}"
+                       placeholder="••••••••" autocomplete="new-password" data-clave2 required>
+                <button type="button" class="campo-ojo" aria-label="Mostrar contraseña">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+
+            <label class="reg-check {% if form.terminos.errors %}reg-check-error{% endif %}">
+                <input type="checkbox" id="{{ form.terminos.id_for_label }}" name="{{ form.terminos.html_name }}" {% if form.terminos.value %}checked{% endif %}>
+                <span>Acepto <a href="#terminos">términos y condiciones</a></span>
+            </label>
+
+            <button type="submit" class="boton-primario boton-login">Crear mi cuenta &rarr;</button>
+        </form>
+
+        <p class="login-registro">
+            <span>¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a></span>
+        </p>
+    </div>
+</section>
+
+<!-- ===== Banner final ===== -->
+<section class="cf-banner">
+    <svg class="cf-deco-izq" viewBox="0 0 320 150" aria-hidden="true">
+        <circle cx="60" cy="130" r="70" fill="#dbe7fd"/><circle cx="230" cy="70" r="22" fill="#c9dbfb"/>
+        <circle cx="270" cy="110" r="6" fill="#9fbdf6"/><circle cx="200" cy="18" r="5" fill="#9fbdf6"/>
+    </svg>
+    <svg class="cf-deco-der" viewBox="0 0 300 150" aria-hidden="true">
+        <circle cx="270" cy="40" r="48" fill="#dbe7fd"/><circle cx="205" cy="128" r="9" fill="#fde7a8"/>
+        <path d="M120 150 C 128 118, 150 112, 168 124 S 196 126, 190 100 S 176 76, 172 70" fill="none" stroke="#8fb0f2" stroke-width="2.5" stroke-dasharray="7 7" stroke-linecap="round"/>
+    </svg>
+    <img src="{% static 'img/birrete.webp' %}" alt="" class="cf-banner-birrete">
+    <div class="cf-banner-texto">
+        <span class="cf-banner-etiqueta">Tu futuro empieza aquí</span>
+        <h2>Da el primer paso hacia tu beca</h2>
+        <p>Conoce cómo funciona el proceso, desde el registro hasta el resultado de tu solicitud.</p>
+    </div>
+    <a href="{% url 'como_funciona' %}" class="boton-primario boton-grande">Conoce cómo funciona &rarr;</a>
+    <img src="{% static 'img/avion-papel.webp' %}" alt="" class="cf-banner-avion">
+</section>
+
+<!-- ===== Ventana de términos (se abre con el enlace #terminos, sin JavaScript) ===== -->
+<div id="terminos" class="modal" role="dialog" aria-labelledby="terminos-titulo">
+    <a href="#" class="modal-fondo" aria-label="Cerrar"></a>
+    <div class="modal-caja">
+        <h3 id="terminos-titulo">Términos y condiciones</h3>
+        <p>Al crear tu cuenta en la Plataforma Nacional para la Gestión Integral de Becas (PNGIB) aceptas que:</p>
+        <ul>
+            <li>La información que registras es verdadera y es tuya.</li>
+            <li>Tus datos se usarán únicamente para gestionar tus solicitudes de beca.</li>
+            <li>Eres responsable de mantener tu contraseña en secreto.</li>
+            <li>El comité evaluador puede verificar la información y los documentos que presentes.</li>
+        </ul>
+        <a href="#" class="boton-primario boton-login">Entendido</a>
+    </div>
 </div>
+{% endblock %}
+
+{% block js_extra %}
+{% include "usuarios/_ojo_contrasena.html" %}
+<script>
+/* ---- DPI: solo números, con espacios automáticos (1234 56789 0101) ---- */
+var dpi = document.querySelector('[data-dpi]');
+var contador = document.querySelector('[data-dpi-contador]');
+function formatearDpi() {
+    var n = dpi.value.replace(/\D/g, '').slice(0, 13);
+    var partes = [n.slice(0, 4), n.slice(4, 9), n.slice(9, 13)].filter(Boolean);
+    dpi.value = partes.join(' ');
+    contador.textContent = n.length + '/13';
+    contador.classList.toggle('completo', n.length === 13);
+}
+dpi.addEventListener('input', formatearDpi);
+formatearDpi();
+
+/* ---- Contraseña: los requisitos se marcan en verde al cumplirse ---- */
+var clave = document.querySelector('[data-clave]');
+var clave2 = document.querySelector('[data-clave2]');
+function revisarClave() {
+    var v = clave.value, v2 = clave2.value;
+    marcar('largo', v.length >= 8);
+    marcar('letra', /[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(v));
+    marcar('igual', v.length > 0 && v === v2);
+}
+function marcar(req, ok) {
+    document.querySelector('[data-req="' + req + '"]').classList.toggle('ok', ok);
+}
+clave.addEventListener('input', revisarClave);
+clave2.addEventListener('input', revisarClave);
+
+/* ---- Al escribir en un campo marcado, se considera corregido ---- */
+document.querySelectorAll('.reg-form input, .reg-form select').forEach(function (el) {
+    el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', function () {
+        campoCorregido(el);
+    });
+});
+
+/* ---- Ventana flotante de errores ---- */
+var globo = document.querySelector('[data-globo]');
+var tarjeta = document.querySelector('.reg-tarjeta');
+
+function cajaDe(id) {
+    var el = document.getElementById(id);
+    return el ? (el.closest('.campo') || el.closest('.reg-check')) : null;
+}
+
+// Coloca la ventana a la altura del campo indicado
+function anclar(id) {
+    var caja = cajaDe(id);
+    if (!globo || !caja) return;
+    var arriba = caja.getBoundingClientRect().top - tarjeta.getBoundingClientRect().top;
+    if (window.innerWidth <= 700) {
+        // En celular va debajo del campo, a todo el ancho
+        globo.style.top = (arriba + caja.offsetHeight + 10) + 'px';
+    } else {
+        globo.style.top = (arriba - 8) + 'px';
+    }
+    document.querySelectorAll('.globo-lista li').forEach(function (li) {
+        li.classList.toggle('activo', li.dataset.item === id);
+    });
+}
+
+function cerrarGlobo() { if (globo) globo.hidden = true; }
+
+if (globo) {
+    var primero = globo.querySelector('[data-item]').dataset.item;
+    anclar(primero);
+    var campo = document.getElementById(primero);
+    campo.focus({ preventScroll: true });
+    campo.scrollIntoView({ block: 'center' });
+
+    globo.querySelector('[data-globo-cerrar]').addEventListener('click', cerrarGlobo);
+
+    // Tocar un error de la lista lleva a ese campo
+    globo.querySelectorAll('[data-ir]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var el = document.getElementById(b.dataset.ir);
+            el.focus(); el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            anclar(b.dataset.ir);
+        });
+    });
+
+    // Al entrar a otro campo con error, la ventana lo acompaña
+    document.querySelectorAll('.campo-error input, .campo-error select, .reg-check-error input').forEach(function (el) {
+        el.addEventListener('focus', function () {
+            if (globo.querySelector('[data-item="' + el.id + '"]')) anclar(el.id);
+        });
+    });
+
+    window.addEventListener('resize', function () {
+        var activo = globo.querySelector('li.activo, .globo-uno');
+        if (activo) anclar(activo.dataset.item);
+    });
+}
+
+// Al corregir un campo: se quita su marca y sale de la lista
+function campoCorregido(el) {
+    var caja = el.closest('.campo') || el.closest('.reg-check');
+    if (caja) caja.classList.remove('campo-error', 'reg-check-error');
+    if (!globo) return;
+    var ids = [el.id];
+    // Las dos contraseñas comparten el mismo aviso
+    if (el.id === 'id_password1' || el.id === 'id_password2') ids = ['id_password1', 'id_password2'];
+    ids.forEach(function (id) {
+        var item = globo.querySelector('[data-item="' + id + '"]');
+        if (item) item.remove();
+    });
+    var quedan = globo.querySelectorAll('[data-item]');
+    var total = globo.querySelector('[data-globo-total]');
+    if (total) total.textContent = quedan.length;
+    if (!quedan.length) cerrarGlobo();
+    else if (globo.querySelector('li.activo') === null) anclar(quedan[0].dataset.item);
+}
+</script>
 {% endblock %}

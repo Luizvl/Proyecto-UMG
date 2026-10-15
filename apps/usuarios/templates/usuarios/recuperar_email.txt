@@ -1,0 +1,14 @@
+{% autoescape off %}Hola{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+Recibimos una solicitud para restablecer la contraseña de tu cuenta en la
+Plataforma Nacional para la Gestión Integral de Becas (PNGIB).
+
+Para crear una nueva contraseña, abre este enlace:
+
+{{ protocol }}://{{ domain }}{% url 'usuarios:recuperar_confirmar' uidb64=uid token=token %}
+
+El enlace solo funciona una vez. Si tú no pediste este cambio, ignora este
+correo: tu contraseña actual sigue siendo la misma.
+
+— Equipo PNGIB
+{% endautoescape %}

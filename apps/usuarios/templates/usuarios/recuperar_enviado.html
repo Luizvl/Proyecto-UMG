@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Revisa tu correo | PNGIB{% endblock %}
+
+{% block contenido %}
+<section class="auth-pagina">
+    {% include "usuarios/_auth_tarjeta_inicio.html" %}
+        <h1>Revisa tu correo</h1>
+        <p class="auth-subtitulo">
+            Si el correo que escribiste está registrado, te enviamos un enlace para crear una nueva contraseña.
+            Revisa también tu carpeta de spam.
+        </p>
+        <a href="{% url 'usuarios:login' %}" class="boton-primario boton-login">Volver a iniciar sesión</a>
+    </div>
+</section>
+{% endblock %}

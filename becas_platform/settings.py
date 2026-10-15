@@ -169,3 +169,31 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 LOGIN_URL = "usuarios:login"
 LOGIN_REDIRECT_URL = "usuarios:panel"
 LOGOUT_REDIRECT_URL = "usuarios:login"
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+# Correo (recuperación de contraseña)
+# Mientras no haya un servidor de correo configurado, los correos se
+# imprimen en la terminal donde corre "python manage.py runserver".
+# Para enviar correos reales, definir DJANGO_EMAIL_BACKEND y los EMAIL_* en .env
+# ---------------------------------------------------------------------------
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND", "apps.usuarios.correo_consola.EmailBackend"
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "PNGIB <no-responder@pngib.gt>")
