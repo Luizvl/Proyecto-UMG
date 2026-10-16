@@ -25,7 +25,7 @@
             </div>
         </section>
 
-        <!-- ===== Conteos (también sirven para filtrar) ===== -->
+        <!-- ===== Conteos ===== -->
         <div class="ms-stats">
             <button type="button" class="ms-stat activo" data-filtro="todas">
                 <span class="ms-stat-icono azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
@@ -91,6 +91,7 @@
                             {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{% endif %}
                             {{ r.etiqueta }}
                         </span>
+                        <!-- El Stepper Animado ya estructurado por Byron -->
                         <ol class="ms-pasos ms-pasos-{{ r.clave }}">
                             {% for p in r.pasos %}
                             <li class="ms-paso-{{ p.situacion }}"><i></i><span>{{ p.nombre }}</span></li>
@@ -98,13 +99,22 @@
                         </ol>
                     </div>
 
-                    <div class="ms-acciones">
+                    <div class="ms-acciones d-flex align-items-center gap-2">
                         {% if r.docs_pendientes %}
                             <span class="ms-boton-subir" title="La carga de documentos estará disponible pronto">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
                                 Subir documentos
                             </span>
                         {% endif %}
+                        
+                        <!-- NUESTRO BOTÓN PDF (Solo aparece si está aprobada) -->
+                        {% if r.clave == "aprobada" %}
+                            <button type="button" class="boton-primario btn-sm rounded" style="background-color: #198754; border-color: #198754; font-weight: 600;" onclick="generarCartaPDF('{{ solicitud.id }}', '{{ solicitud.convocatoria.nombre|escapejs }}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Descargar Carta
+                            </button>
+                        {% endif %}
+
                         <button type="button" class="ms-boton-detalle" data-detalle aria-expanded="false">Ver detalle <span>&rarr;</span></button>
                     </div>
                 </div>
@@ -119,7 +129,7 @@
                             {% empty %}
                                 <li class="falta">Aún no has subido documentos.</li>
                             {% endfor %}
-                        </ul>
+                        </ul>   
                     </div>
                     <div>
                         <h4>Historial</h4>
@@ -133,6 +143,43 @@
                         {% if solicitud.motivo_rechazo %}<p class="ms-motivo"><b>Motivo:</b> {{ solicitud.motivo_rechazo }}</p>{% endif %}
                     </div>
                 </div>
+
+                <!-- NUESTRA PLANTILLA OCULTA PARA EL PDF -->
+                {% if r.clave == "aprobada" %}
+                <div id="plantilla-pdf-{{ solicitud.id }}" style="display: none;">
+                    <div style="padding: 50px; font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; background-color: #fff;">
+                        <div style="text-align: center; border-bottom: 2px solid #0d6efd; padding-bottom: 20px; margin-bottom: 30px;">
+                            <h2 style="color: #0d6efd; margin: 0; font-size: 24px;">Universidad Mariano Gálvez de Guatemala</h2>
+                            <h3 style="color: #555; margin: 5px 0 0; font-size: 18px;">Plataforma de Gestión de Becas</h3>
+                        </div>
+                        
+                        <div style="text-align: right; margin-bottom: 30px; font-size: 14px;">
+                            <strong>Fecha de Emisión:</strong> {% now "d \d\e F \d\e Y" %}<br>
+                            <strong>Resolución No.</strong> {{ solicitud.id }}-2026
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <p style="font-size: 16px;">Estimado/a estudiante:<br>
+                            <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
+                        </div>
+
+                        <div style="text-align: justify; margin-bottom: 40px;">
+                            <p>Por medio de la presente, nos complace informarle que, tras una exhaustiva revisión de su expediente académico y su carta de motivación, el Comité Evaluador ha decidido emitir una resolución <strong style="color: #198754;">FAVORABLE</strong> a su postulación.</p>
+                            
+                            <p>En consecuencia, se le otorga formalmente la adjudicación para la <strong>{{ solicitud.convocatoria.nombre }}</strong>.</p>
+                            
+                            <p>Le invitamos a continuar demostrando el alto nivel académico y compromiso que le han hecho acreedor/a de este beneficio. Por favor, manténgase atento/a al portal para los siguientes pasos administrativos.</p>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 80px;">
+                            <hr style="width: 250px; border: 1px solid #ccc; margin: 0 auto 10px;">
+                            <strong>Comité de Becas Universitarias</strong><br>
+                            <small style="color: #777;">Firma Electrónica Autorizada</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
             </article>
         {% empty %}
             <div class="ms-vacio">
@@ -193,6 +240,10 @@
 {% endblock %}
 
 {% block js_extra %}
+<!-- INYECCIÓN: SweetAlert2 y html2pdf.js -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script>
 /* ---- Ver detalle: abre y cierra el panel de cada tarjeta ---- */
 document.querySelectorAll('[data-detalle]').forEach(function (b) {
@@ -233,5 +284,51 @@ document.querySelector('[data-orden]').addEventListener('change', function (e) {
         return modo === 'reciente' ? d : -d;
     }).forEach(function (t) { lista.insertBefore(t, sinResultados); });
 });
+
+/* ---- NUESTRO SUPERPODER: GENERAR PDF EN VIVO ---- */
+function generarCartaPDF(solicitudId, nombreBeca) {
+    // 1. Obtenemos el contenedor oculto con nuestro HTML membretado
+    var elemento = document.getElementById('plantilla-pdf-' + solicitudId);
+    
+    // 2. Lo clonamos y lo volvemos "visible" pero fuera de la pantalla (truco de renderizado)
+    var clon = elemento.cloneNode(true);
+    clon.style.display = 'block';
+    clon.style.position = 'absolute';
+    clon.style.top = '-9999px';
+    document.body.appendChild(clon);
+
+    // 3. Opciones profesionales para el motor PDF
+    var opt = {
+        margin:       0.5,
+        filename:     'Carta_Adjudicacion_' + nombreBeca.replace(/\s+/g, '_') + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // 4. Mostrar cargador elegante al usuario
+    Swal.fire({
+        title: 'Firmando documento...',
+        text: 'Generando tu carta oficial de adjudicación',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // 5. ¡Ejecutar magia y descargar!
+    html2pdf().set(opt).from(clon).save().then(function() {
+        // Limpiamos el clon temporal
+        document.body.removeChild(clon);
+        
+        // Alerta de éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga Completa!',
+            text: 'Tu documento oficial ha sido generado.',
+            confirmButtonColor: '#0d6efd'
+        });
+    });
+}
 </script>
 {% endblock %}

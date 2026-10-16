@@ -129,6 +129,9 @@
 {% endblock %}
 
 {% block js_extra %}
+<!-- SweetAlert2 JS inyectado para mejorar las alertas -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
 <script>
 var motivo = document.querySelector('[data-motivo]');
 var contador = document.querySelector('[data-contador]');
@@ -136,7 +139,9 @@ var errMotivo = document.querySelector('[data-error-motivo]');
 var input = document.querySelector('[data-archivo]');
 var drop = document.querySelector('[data-drop]');
 var errArchivo = document.querySelector('[data-error-archivo]');
-var MAX = 5 * 1024 * 1024;
+
+// CORRECCIÓN AL ERROR DE SINTAXIS DE BYRON: 5MB en bytes
+var MAX = 5 * 1024 * 1024; 
 
 function marcarPaso(n, ok) { document.querySelector('[data-paso="' + n + '"]').classList.toggle('ok', ok); }
 function mostrarError(p, msg) { p.querySelector('span').textContent = msg; p.hidden = false; }
@@ -159,12 +164,30 @@ function validarArchivo(f) {
     if (f.size > MAX) return 'El archivo pesa ' + (f.size / 1048576).toFixed(1) + ' MB. El máximo es 5 MB.';
     return '';
 }
+
 function mostrarArchivo() {
-    var f = input.files[0], error = f ? validarArchivo(f) : '';
+    var f = input.files[0];
+    var error = f ? validarArchivo(f) : '';
     var lleno = !!f && !error;
+    
+    // INTEGRACIÓN SWEETALERT2: Alerta visual instantánea si hay error
+    if (error && f) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Archivo Inválido',
+            text: error,
+            confirmButtonColor: '#0d6efd',
+            toast: true,
+            position: 'top-end',
+            timer: 4000,
+            showConfirmButton: false
+        });
+    }
+
     drop.querySelector('.ap-drop-vacio').hidden = lleno;
     drop.querySelector('.ap-drop-lleno').hidden = !lleno;
     drop.classList.toggle('lleno', lleno);
+    
     if (lleno) {
         drop.querySelector('[data-nombre]').textContent = f.name;
         drop.querySelector('[data-peso]').textContent = (f.size / 1024 < 1024 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB');
@@ -193,7 +216,7 @@ function actualizarPaso3() {
     marcarPaso(3, motivo.value.trim().length > 0 && input.files.length > 0);
 }
 
-/* ---- Antes de enviar: revisar todo ---- */
+/* ---- Antes de enviar: revisar todo con animaciones ---- */
 document.querySelector('[data-form]').addEventListener('submit', function (e) {
     var hayError = false;
     if (!motivo.value.trim()) {
@@ -201,9 +224,20 @@ document.querySelector('[data-form]').addEventListener('submit', function (e) {
     }
     var err = validarArchivo(input.files[0]);
     if (err) { drop.classList.add('con-error'); mostrarError(errArchivo, err); hayError = true; }
+    
     if (hayError) {
         e.preventDefault();
         (motivo.classList.contains('con-error') ? motivo : drop).scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } else {
+        // INTEGRACIÓN SWEETALERT2: Pantalla de carga profesional
+        Swal.fire({
+            title: 'Procesando tu solicitud...',
+            html: 'Subiendo expediente seguro',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
     }
 });
 

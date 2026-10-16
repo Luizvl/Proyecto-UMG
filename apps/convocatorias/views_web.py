@@ -7,9 +7,10 @@ def listado_convocatorias(request):
     convocatorias = Convocatoria.objects.all()
     
     aplicadas_ids = []
-    if request.user.is_authenticated and hasattr(request.user, 'estudiante'):
+    # CORRECCIÓN: Quitamos el hasattr y usamos request.user directamente
+    if request.user.is_authenticated:
         aplicadas_ids = Solicitud.objects.filter(
-            estudiante=request.user.estudiante
+            estudiante=request.user
         ).values_list('convocatoria_id', flat=True)
 
     contexto = {
