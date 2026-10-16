@@ -1,53 +1,207 @@
 {% extends 'base.html' %}
+{% load static convocatorias_ui %}
+{% block titulo %}Convocatorias | PNGIB{% endblock %}
 
 {% block contenido %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="font-weight-bold">Convocatorias Disponibles</h2>
-        <span class="badge badge-verde">Total: {{ convocatorias|length }}</span>
+<div class="cv">
+
+    <!-- ===== Encabezado ===== -->
+    <section class="cv-hero">
+        <div>
+            <h1>Convocatorias Disponibles</h1>
+            <p>Explora las becas activas y encuentra la oportunidad que se adapte a tu perfil.</p>
+        </div>
+        <div class="cv-tip">
+            <span class="cv-tip-icono" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z" fill="#fbbf24"/><rect x="9" y="19" width="6" height="2.2" rx="1.1" fill="#9ca3af"/><path d="M10 11.5l2 2 2-2" fill="none" stroke="#b45309" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <div>
+                <strong>Encuentra la beca ideal</strong>
+                <p>Revisa los requisitos y aplica en las convocatorias activas.</p>
+            </div>
+        </div>
+        <div class="cv-hero-visual" aria-hidden="true">
+            <img src="{% static 'img/login-campus.webp' %}" alt="" class="cv-campus">
+            <img src="{% static 'img/login-birrete.webp' %}" alt="" class="cv-birrete">
+        </div>
+    </section>
+
+    <!-- ===== Filtros ===== -->
+    <div class="cv-filtros">
+        <label class="cv-buscar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input type="search" placeholder="Buscar por nombre de beca o palabra clave..." data-buscar aria-label="Buscar convocatoria">
+        </label>
+        <label class="cv-select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+            <span><small>Estado</small>
+                <select data-estado>
+                    <option value="">Todas</option>
+                    <option value="activa">Activas</option>
+                    <option value="proxima">Fuera de fecha</option>
+                    <option value="cerrada">Cerradas</option>
+                </select>
+            </span>
+        </label>
+        <label class="cv-select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 1 9l11 5 11-5z"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>
+            <span><small>Nivel académico</small>
+                <select data-nivel>
+                    <option value="">Todos</option>
+                    <option value="MEDIO">Nivel Medio</option>
+                    <option value="UNIVERSITARIO">Universitario</option>
+                    <option value="POSGRADO">Posgrado</option>
+                </select>
+            </span>
+        </label>
+        <button type="button" class="cv-limpiar" data-limpiar>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>
+            Limpiar filtros
+        </button>
     </div>
 
-    <div class="row">
-        {% for convocatoria in convocatorias %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="tarjeta p-4 shadow-sm border rounded bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h4 class="m-0 font-weight-bold h5">{{ convocatoria.nombre }}</h4>
-                        <span class="badge badge-verde">{{ convocatoria.estado }}</span>
-                    </div>
-                    
-                    <p class="text-muted small mb-3">
-                        {{ convocatoria.descripcion|default:"Sin descripción disponible."|truncatewords:20 }}
-                    </p>
-                    
-                    <div class="mb-3 text-secondary small">
-                        <div><strong>Cupos disponibles:</strong> {{ convocatoria.cupo }}</div>
-                    </div>
+    <div class="cv-barra">
+        <p>Resultados: <b data-total>{{ convocatorias|length }}</b> <b>convocatoria{{ convocatorias|length|pluralize }}</b></p>
+        <label class="ms-orden">Ordenar por:
+            <select data-orden>
+                <option value="reciente">Más recientes</option>
+                <option value="cierre">Cierran pronto</option>
+                <option value="nombre">Nombre (A-Z)</option>
+            </select>
+        </label>
+    </div>
 
-                    <div class="mt-3">
-                        {% if convocatoria.id in aplicadas_ids %}
-                            <button class="btn btn-secondary btn-block w-100" disabled>✓ Ya has aplicado</button>
-                        {% else %}
-                            <a href="{% url 'solicitudes:aplicar' convocatoria.id %}" class="btn btn-primary btn-block w-100">
-                                Aplicar a esta beca
-                            </a>
-                        {% endif %}
+    <!-- ===== Lista ===== -->
+    <div class="cv-lista" data-lista>
+    {% for c in convocatorias %}
+        {% datos_convocatoria c request.user as d %}
+        <article class="cv-card" data-estado="{{ d.clave }}" data-nivel="{{ c.tipo_beca }}"
+                 data-texto="{{ c.nombre|lower }} {{ c.descripcion|lower }} {{ c.get_tipo_beca_display|lower }}"
+                 data-inicio="{{ c.fecha_inicio|date:'U' }}" data-fin="{{ c.fecha_fin|date:'U' }}" data-nombre="{{ c.nombre|lower }}">
+            <div class="cv-fila">
+                <div class="cv-foto">
+                    <img src="{% static d.imagen %}" alt="">
+                    <span class="cv-badge cv-badge-{{ d.clave }}">{{ d.etiqueta }}</span>
+                </div>
+
+                <div class="cv-info">
+                    <h3>{{ c.nombre }}</h3>
+                    <p>{{ c.descripcion|default:"Sin descripción disponible."|truncatechars:120 }}</p>
+                    <div class="cv-datos">
+                        <span class="cv-dato">
+                            <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 1 9l11 5 11-5z"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg></i>
+                            <span><small>Nivel académico</small>{{ c.get_tipo_beca_display }}</span>
+                        </span>
+                        <span class="cv-dato">
+                            <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
+                            <span><small>Abre desde</small>{{ c.fecha_inicio|date:"j \d\e F \d\e Y" }}</span>
+                        </span>
                     </div>
                 </div>
-            </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="tarjeta text-center p-5 border rounded bg-light">
-                    <h4 class="text-muted mb-2">No se encontraron convocatorias activas</h4>
-                    <p class="text-secondary small mb-3">
-                        Para habilitar postulaciones, crea una convocatoria desde el panel de administración.
-                    </p>
-                    <a href="/admin/convocatorias/convocatoria/add/" target="_blank" class="btn btn-outline-primary btn-sm">
-                        + Crear convocatoria en Admin
-                    </a>
+
+                <div class="cv-cupos">
+                    <div class="cv-dato">
+                        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/></svg></i>
+                        <span><small>Cupos disponibles</small><b>{{ d.disponibles }} de {{ c.cupo }}</b>
+                            <span class="cv-barra-cupo {% if d.porcentaje < 25 %}baja{% endif %}"><span style="width: {{ d.porcentaje }}%"></span></span>
+                        </span>
+                    </div>
+                    <div class="cv-dato">
+                        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
+                        <span><small>Fecha límite de aplicación</small>{{ c.fecha_fin|date:"j \d\e F \d\e Y" }}</span>
+                    </div>
+                </div>
+
+                <div class="cv-acciones">
+                    <button type="button" class="boton-primario cv-btn" data-detalle aria-expanded="false">Ver detalles <span>&rarr;</span></button>
+                    {% if d.ya_aplico %}
+                        <span class="cv-btn cv-btn-hecho">✓ Ya aplicaste</span>
+                    {% elif not d.abierta %}
+                        <span class="cv-btn cv-btn-off">No disponible</span>
+                    {% elif d.sin_cupo %}
+                        <span class="cv-btn cv-btn-off">Sin cupos</span>
+                    {% else %}
+                        <a href="{% url 'solicitudes:aplicar' c.id %}" class="boton-secundario cv-btn">Aplicar a esta beca</a>
+                    {% endif %}
                 </div>
             </div>
-        {% endfor %}
+
+            <div class="cv-detalle" hidden>
+                <div>
+                    <h4>Descripción</h4>
+                    <p>{{ c.descripcion|default:"Sin descripción disponible." }}</p>
+                </div>
+                <div>
+                    <h4>Fechas y cupo</h4>
+                    <ul>
+                        <li>Inicio: <b>{{ c.fecha_inicio|date:"j \d\e F \d\e Y" }}</b></li>
+                        <li>Cierre: <b>{{ c.fecha_fin|date:"j \d\e F \d\e Y" }}</b></li>
+                        <li>Cupo total: <b>{{ c.cupo }}</b> &middot; disponibles: <b>{{ d.disponibles }}</b></li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+    {% empty %}
+        <div class="ms-vacio">
+            <img src="{% static 'img/login-solicitud.webp' %}" alt="">
+            <h3>Por ahora no hay convocatorias</h3>
+            <p>Vuelve pronto: aquí aparecerán las becas disponibles.</p>
+            {% if user.is_staff %}<a href="/admin/convocatorias/convocatoria/add/" class="boton-secundario">+ Crear convocatoria en Admin</a>{% endif %}
+        </div>
+    {% endfor %}
+        <p class="ms-sin-resultados" hidden>No encontramos convocatorias con esos filtros. <button type="button" data-limpiar>Limpiar filtros</button></p>
     </div>
 </div>
+{% endblock %}
+
+{% block js_extra %}
+<script>
+var tarjetas = Array.from(document.querySelectorAll('.cv-card'));
+var buscar = document.querySelector('[data-buscar]');
+var estado = document.querySelector('[data-estado]');
+var nivel = document.querySelector('[data-nivel]');
+var total = document.querySelector('[data-total]');
+var sinResultados = document.querySelector('.ms-sin-resultados');
+
+/* ---- Filtrar por texto, estado y nivel ---- */
+function filtrar() {
+    var q = buscar.value.trim().toLowerCase(), visibles = 0;
+    tarjetas.forEach(function (t) {
+        var ver = (!q || t.dataset.texto.indexOf(q) !== -1)
+               && (!estado.value || t.dataset.estado === estado.value)
+               && (!nivel.value || t.dataset.nivel === nivel.value);
+        t.hidden = !ver; if (ver) visibles++;
+    });
+    total.textContent = visibles;
+    sinResultados.hidden = visibles > 0 || !tarjetas.length;
+}
+buscar.addEventListener('input', filtrar);
+estado.addEventListener('change', filtrar);
+nivel.addEventListener('change', filtrar);
+document.querySelectorAll('[data-limpiar]').forEach(function (b) {
+    b.addEventListener('click', function () { buscar.value = ''; estado.value = ''; nivel.value = ''; filtrar(); });
+});
+
+/* ---- Ordenar ---- */
+var lista = document.querySelector('[data-lista]');
+document.querySelector('[data-orden]').addEventListener('change', function (e) {
+    var modo = e.target.value;
+    tarjetas.sort(function (a, b) {
+        if (modo === 'nombre') return a.dataset.nombre.localeCompare(b.dataset.nombre);
+        if (modo === 'cierre') return a.dataset.fin - b.dataset.fin;
+        return b.dataset.inicio - a.dataset.inicio;
+    }).forEach(function (t) { lista.insertBefore(t, sinResultados); });
+});
+
+/* ---- Ver detalles ---- */
+document.querySelectorAll('[data-detalle]').forEach(function (b) {
+    b.addEventListener('click', function () {
+        var panel = b.closest('.cv-card').querySelector('.cv-detalle');
+        var abrir = panel.hidden;
+        panel.hidden = !abrir;
+        b.setAttribute('aria-expanded', abrir);
+        b.firstChild.textContent = abrir ? 'Ocultar detalles ' : 'Ver detalles ';
+    });
+});
+</script>
 {% endblock %}

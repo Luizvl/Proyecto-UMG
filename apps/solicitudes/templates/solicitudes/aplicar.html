@@ -1,59 +1,212 @@
 {% extends 'base.html' %}
+{% load static convocatorias_ui %}
+{% block titulo %}Aplicar: {{ convocatoria.nombre }} | PNGIB{% endblock %}
 
 {% block contenido %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded p-4 bg-white">
-                <div class="border-bottom pb-3 mb-4">
-                    <span class="badge badge-verde mb-2">Convocatoria Activa</span>
-                    <h2 class="h3 font-weight-bold text-dark m-0">{{ convocatoria.nombre }}</h2>
-                    <p class="text-muted mt-2 mb-0">
-                        {{ convocatoria.descripcion|default:"Completa el formulario a continuación para postularte a esta beca." }}
-                    </p>
-                </div>
+{% datos_convocatoria convocatoria request.user as d %}
+<div class="ap">
 
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
+    <!-- ===== Formulario ===== -->
+    <section class="ap-principal">
+        <header class="ap-head">
+            <div>
+                <span class="ap-badge ap-badge-{{ d.clave }}"><i></i>Convocatoria {{ d.etiqueta|lower }}</span>
+                <h1>{{ convocatoria.nombre }}</h1>
+                <p>{{ convocatoria.descripcion|default:"Completa el formulario para postularte a esta beca." }}</p>
+            </div>
+            <div class="ap-visual" aria-hidden="true">
+                <span class="ap-b b1"></span><span class="ap-b b2"></span><span class="ap-b b3"></span>
+                <img src="{% static 'img/login-libros.webp' %}" alt="" class="ap-libros">
+                <img src="{% static 'img/login-birrete.webp' %}" alt="" class="ap-birrete">
+            </div>
+        </header>
 
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
-                        </div>
-                    {% endif %}
-
-                    {% for field in form %}
-                        <div class="form-group mb-3">
-                            <label for="{{ field.id_for_label }}" class="font-weight-bold text-secondary mb-1">
-                                {{ field.label }}
-                            </label>
-                            
-                            {# Renderizado automático del campo #}
-                            <div class="form-control-wrapper">
-                                {{ field }}
-                            </div>
-
-                            {% if field.help_text %}
-                                <small class="form-text text-muted">{{ field.help_text }}</small>
-                            {% endif %}
-
-                            {% for error in field.errors %}
-                                <div class="text-danger small mt-1">⚠️ {{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-
-                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                        <a href="{% url 'convocatorias:lista' %}" class="btn btn-outline-secondary">
-                            ← Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-primary px-4">
-                            Enviar Solicitud
-                        </button>
-                    </div>
-                </form>
+        <div class="ap-datos">
+            <div class="ap-dato">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 1 9l11 5 11-5z"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg></i>
+                <span><small>Nivel académico</small><b>{{ convocatoria.get_tipo_beca_display }}</b></span>
+            </div>
+            <div class="ap-dato">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
+                <span><small>Abre desde</small><b>{{ convocatoria.fecha_inicio|date:"j M Y" }}</b></span>
+            </div>
+            <div class="ap-dato">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/></svg></i>
+                <span><small>Fecha límite</small><b>{{ convocatoria.fecha_fin|date:"j M Y" }}</b></span>
+            </div>
+            <div class="ap-dato">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/></svg></i>
+                <span><small>Cupos disponibles</small><b>{{ d.disponibles }} de {{ convocatoria.cupo }}</b></span>
             </div>
         </div>
-    </div>
+
+        {% if form.non_field_errors %}
+            <div class="ap-alerta">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="ap-form" novalidate data-form>
+            {% csrf_token %}
+
+            <!-- Motivo -->
+            <div class="ap-campo-head">
+                <label for="{{ form.motivo.id_for_label }}">Motivo de la solicitud <span class="req">*</span></label>
+                <span class="ap-contador" data-contador>0 / 1,000</span>
+            </div>
+            <textarea name="{{ form.motivo.html_name }}" id="{{ form.motivo.id_for_label }}" rows="5" maxlength="1000"
+                      class="{% if form.motivo.errors %}con-error{% endif %}" data-motivo
+                      placeholder="Explica brevemente por qué solicitas esta beca, tus objetivos académicos y cómo se relaciona con tu desarrollo profesional...">{{ form.motivo.value|default:'' }}</textarea>
+            <p class="ap-error" data-error-motivo {% if not form.motivo.errors %}hidden{% endif %}>
+                <svg viewBox="0 0 24 24"><path d="M12 2 1 21h22z" fill="currentColor"/><rect x="11" y="9" width="2" height="6" rx="1" fill="#fff"/><circle cx="12" cy="18" r="1.2" fill="#fff"/></svg>
+                <span>{% if form.motivo.errors %}{{ form.motivo.errors.0 }}{% else %}Escribe el motivo de tu solicitud.{% endif %}</span>
+            </p>
+
+            <!-- Documento -->
+            <label class="ap-label">Documento de respaldo (PDF) <span class="req">*</span></label>
+            <label class="ap-drop {% if form.documento.errors %}con-error{% endif %}" data-drop>
+                <input type="file" name="{{ form.documento.html_name }}" accept=".pdf,application/pdf" data-archivo hidden>
+                <div class="ap-drop-vacio">
+                    <svg class="ap-nube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1-.9-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18"/><path d="M12 12v8M9 15l3-3 3 3"/></svg>
+                    <strong>Arrastra y suelta tu archivo PDF aquí</strong>
+                    <small>o haz clic para seleccionarlo</small>
+                    <span class="ap-boton-archivo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+                        Seleccionar archivo
+                    </span>
+                    <em>Sube un único archivo PDF con tu constancia de estudios o DPI. Tamaño máximo: 5 MB.</em>
+                </div>
+                <div class="ap-drop-lleno" hidden>
+                    <span class="ap-pdf">PDF</span>
+                    <span class="ap-archivo-info"><b data-nombre></b><small data-peso></small></span>
+                    <button type="button" class="ap-quitar" data-quitar aria-label="Quitar archivo">&times;</button>
+                </div>
+            </label>
+            <p class="ap-error" data-error-archivo {% if not form.documento.errors %}hidden{% endif %}>
+                <svg viewBox="0 0 24 24"><path d="M12 2 1 21h22z" fill="currentColor"/><rect x="11" y="9" width="2" height="6" rx="1" fill="#fff"/><circle cx="12" cy="18" r="1.2" fill="#fff"/></svg>
+                <span>{% if form.documento.errors %}{{ form.documento.errors.0 }}{% else %}Debes adjuntar un archivo PDF.{% endif %}</span>
+            </p>
+
+            <div class="ap-botones">
+                <a href="{% url 'convocatorias:lista' %}" class="ap-cancelar">&larr; Cancelar</a>
+                <button type="submit" class="boton-primario ap-enviar">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                    Enviar solicitud
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- ===== Lateral ===== -->
+    <aside class="ap-lateral">
+        <section>
+            <header class="ap-lat-head">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></i>
+                <h2>Sobre esta beca</h2>
+            </header>
+            <p class="ap-lat-desc">{{ convocatoria.descripcion|default:"Esta convocatoria aún no tiene una descripción detallada." }}</p>
+            <ul class="ap-lat-lista">
+                <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 1 9l11 5 11-5z"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg></i>
+                    <span><b>Nivel académico</b>{{ convocatoria.get_tipo_beca_display }}</span></li>
+                <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/></svg></i>
+                    <span><b>Cupos disponibles</b>{{ d.disponibles }} de {{ convocatoria.cupo }}</span></li>
+                <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
+                    <span><b>Fecha límite de postulación</b>{{ convocatoria.fecha_fin|date:"j \d\e F \d\e Y" }}</span></li>
+            </ul>
+        </section>
+
+        <section class="ap-pasos">
+            <header class="ap-lat-head">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></i>
+                <h2>Pasos para completar tu solicitud</h2>
+            </header>
+            <ol>
+                <li data-paso="1"><span>1</span><div><b>Completa el motivo de la solicitud</b><small>Cuéntanos por qué solicitas esta beca.</small></div></li>
+                <li data-paso="2"><span>2</span><div><b>Adjunta el documento de respaldo</b><small>Sube tu constancia de estudios o DPI en PDF.</small></div></li>
+                <li data-paso="3"><span>3</span><div><b>Revisa y envía</b><small>Verifica tu información y envía tu solicitud.</small></div></li>
+            </ol>
+        </section>
+    </aside>
 </div>
+{% endblock %}
+
+{% block js_extra %}
+<script>
+var motivo = document.querySelector('[data-motivo]');
+var contador = document.querySelector('[data-contador]');
+var errMotivo = document.querySelector('[data-error-motivo]');
+var input = document.querySelector('[data-archivo]');
+var drop = document.querySelector('[data-drop]');
+var errArchivo = document.querySelector('[data-error-archivo]');
+var MAX = 5 * 1024 * 1024;
+
+function marcarPaso(n, ok) { document.querySelector('[data-paso="' + n + '"]').classList.toggle('ok', ok); }
+function mostrarError(p, msg) { p.querySelector('span').textContent = msg; p.hidden = false; }
+
+/* ---- Motivo: contador y paso 1 ---- */
+function revisarMotivo() {
+    var n = motivo.value.length;
+    contador.textContent = n.toLocaleString('es-GT') + ' / 1,000';
+    var ok = motivo.value.trim().length > 0;
+    marcarPaso(1, ok);
+    if (ok) { motivo.classList.remove('con-error'); errMotivo.hidden = true; }
+    actualizarPaso3();
+}
+motivo.addEventListener('input', revisarMotivo);
+
+/* ---- Archivo: seleccionar, arrastrar, validar ---- */
+function validarArchivo(f) {
+    if (!f) return 'Debes adjuntar un archivo PDF.';
+    if (!/\.pdf$/i.test(f.name)) return 'Solo se aceptan archivos PDF.';
+    if (f.size > MAX) return 'El archivo pesa ' + (f.size / 1048576).toFixed(1) + ' MB. El máximo es 5 MB.';
+    return '';
+}
+function mostrarArchivo() {
+    var f = input.files[0], error = f ? validarArchivo(f) : '';
+    var lleno = !!f && !error;
+    drop.querySelector('.ap-drop-vacio').hidden = lleno;
+    drop.querySelector('.ap-drop-lleno').hidden = !lleno;
+    drop.classList.toggle('lleno', lleno);
+    if (lleno) {
+        drop.querySelector('[data-nombre]').textContent = f.name;
+        drop.querySelector('[data-peso]').textContent = (f.size / 1024 < 1024 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB');
+        drop.classList.remove('con-error'); errArchivo.hidden = true;
+    } else if (error) {
+        input.value = ''; drop.classList.add('con-error'); mostrarError(errArchivo, error);
+    }
+    marcarPaso(2, lleno);
+    actualizarPaso3();
+}
+input.addEventListener('change', mostrarArchivo);
+['dragenter', 'dragover'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('arrastrando'); });
+});
+['dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('arrastrando'); });
+});
+drop.addEventListener('drop', function (e) {
+    if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; mostrarArchivo(); }
+});
+document.querySelector('[data-quitar]').addEventListener('click', function (e) {
+    e.preventDefault(); input.value = ''; mostrarArchivo();
+});
+
+function actualizarPaso3() {
+    marcarPaso(3, motivo.value.trim().length > 0 && input.files.length > 0);
+}
+
+/* ---- Antes de enviar: revisar todo ---- */
+document.querySelector('[data-form]').addEventListener('submit', function (e) {
+    var hayError = false;
+    if (!motivo.value.trim()) {
+        motivo.classList.add('con-error'); mostrarError(errMotivo, 'El motivo de la solicitud es obligatorio.'); hayError = true;
+    }
+    var err = validarArchivo(input.files[0]);
+    if (err) { drop.classList.add('con-error'); mostrarError(errArchivo, err); hayError = true; }
+    if (hayError) {
+        e.preventDefault();
+        (motivo.classList.contains('con-error') ? motivo : drop).scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+});
+
+revisarMotivo();
+</script>
 {% endblock %}
