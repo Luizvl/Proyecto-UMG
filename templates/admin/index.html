@@ -1,0 +1,175 @@
+{% extends "admin/base_site.html" %}
+{% load static panel_admin log %}
+{# Dashboard del panel de administración — Byron. Todos los números salen de la base de datos. #}
+
+{% block bodyclass %}{{ block.super }} dashboard pn-dashboard{% endblock %}
+{% block coltype %}colM{% endblock %}
+{% block breadcrumbs %}<ol class="breadcrumbs"><li aria-current="page">Inicio</li></ol>{% endblock %}
+
+{% block content_title %}
+<h1>Panel de Administración</h1>
+<p class="pn-subtitulo">Hola, {% firstof user.first_name user.get_username %}. Este es el resumen de la plataforma de becas.</p>
+{% endblock %}
+
+{% block object-tools %}
+{% datos_dashboard as d %}
+<div class="pn-fecha">
+    <i class="pn-ico pn-ico-sm" style="--ico:url('{% static 'img/admin/calendario.svg' %}')"></i>
+    {{ d.hoy|date:"l j \d\e F \d\e Y" }}
+</div>
+{% endblock %}
+
+{% block content %}
+{% datos_dashboard as d %}
+<div id="content-main" class="pn-dash">
+
+    <!-- ===== Tarjetas de resumen ===== -->
+    <section class="pn-tarjetas">
+        {% for t in d.tarjetas %}
+        <a href="{{ t.url }}" class="pn-tarjeta pn-color-{{ t.color }}">
+            <span class="pn-tarjeta-icono"><i class="pn-ico" style="--ico:url('{% static 'img/admin/'|add:t.icono|add:'.svg' %}')"></i></span>
+            <span class="pn-tarjeta-datos">
+                <small>{{ t.titulo }}</small>
+                <strong>{{ t.valor }}</strong>
+                <em>{{ t.detalle }}</em>
+            </span>
+            <i class="pn-ico pn-ico-sm pn-tarjeta-flecha" style="--ico:url('{% static 'img/admin/chevron_derecha.svg' %}')"></i>
+        </a>
+        {% endfor %}
+    </section>
+
+    <div class="pn-dash-grid">
+        <!-- ===== Convocatorias recientes ===== -->
+        <section class="pn-caja pn-caja-ancha">
+            <div class="pn-caja-cabeza">
+                <div>
+                    <h2>Convocatorias recientes</h2>
+                    <p>Las últimas convocatorias según su fecha de inicio</p>
+                </div>
+                <a class="pn-boton-suave" href="{% url 'admin:convocatorias_convocatoria_changelist' %}">Ver todas</a>
+            </div>
+            {% if d.recientes %}
+            <div class="pn-tabla-scroll">
+            <table class="pn-tabla">
+                <thead><tr><th>Convocatoria</th><th>Estado</th><th>Vigencia</th><th>Solicitudes / cupo</th></tr></thead>
+                <tbody>
+                {% for c in d.recientes %}
+                <tr>
+                    <td><a href="{{ c.url }}" class="pn-tabla-nombre">{{ c.obj.nombre }}</a><small>{{ c.tipo }}</small></td>
+                    <td><span class="pn-badge pn-badge-{{ c.clave }}">{{ c.etiqueta }}</span></td>
+                    <td class="pn-nowrap">{{ c.obj.fecha_inicio|date:"d M Y" }} – {{ c.obj.fecha_fin|date:"d M Y" }}</td>
+                    <td>
+                        <div class="pn-ocupacion">
+                            <span class="pn-barra"><span style="width: {{ c.ocupacion }}%"></span></span>
+                            <b>{{ c.n }}/{{ c.obj.cupo }}</b>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+            <p class="pn-vacio">Todavía no hay convocatorias registradas.</p>
+            {% endif %}
+        </section>
+
+        <!-- ===== Gráfica de solicitudes ===== -->
+        <section class="pn-caja">
+            <div class="pn-caja-cabeza">
+                <div>
+                    <h2>Solicitudes por estado</h2>
+                    <p>Distribución actual</p>
+                </div>
+            </div>
+            <div class="pn-dona-zona">
+                <div class="pn-dona" style="background: {{ d.dona }}">
+                    <span><strong>{{ d.total_solicitudes }}</strong><small>solicitud{{ d.total_solicitudes|pluralize:"es" }}</small></span>
+                </div>
+                <ul class="pn-leyenda">
+                    {% for e in d.estados %}
+                    <li>
+                        <a href="{{ e.url }}">
+                            <i style="background: {{ e.color }}"></i>
+                            <span>{{ e.etiqueta }}</span>
+                            <b>{{ e.n }}</b><small>{{ e.pct }}%</small>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <!-- ===== Solicitudes recientes ===== -->
+        <section class="pn-caja pn-caja-ancha">
+            <div class="pn-caja-cabeza">
+                <div>
+                    <h2>Solicitudes recientes</h2>
+                    <p>Las últimas solicitudes enviadas por estudiantes</p>
+                </div>
+                <a class="pn-boton-suave" href="{% url 'admin:solicitudes_solicitud_changelist' %}">Ver todas</a>
+            </div>
+            {% if d.ultimas %}
+            <ul class="pn-lista">
+                {% for s in d.ultimas %}
+                <li>
+                    <span class="pn-avatar pn-avatar-sm">{{ s.obj.estudiante.first_name|default:s.obj.estudiante.email|first|upper }}</span>
+                    <a href="{{ s.url }}" class="pn-lista-texto">
+                        <strong>{% firstof s.obj.estudiante.get_full_name s.obj.estudiante.email %}</strong>
+                        <small>{{ s.obj.convocatoria.nombre }} · {{ s.obj.fecha_creacion|date:"d M Y" }}</small>
+                    </a>
+                    <span class="pn-badge pn-badge-{{ s.clave }}">{{ s.estado }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="pn-vacio">Aún no hay solicitudes.</p>
+            {% endif %}
+        </section>
+
+        <!-- ===== Acciones rápidas ===== -->
+        <section class="pn-caja">
+            <div class="pn-caja-cabeza"><div><h2>Acciones rápidas</h2><p>Atajos frecuentes</p></div></div>
+            <div class="pn-acciones">
+                {% url 'admin:convocatorias_convocatoria_add' as u %}{% if u %}
+                <a href="{{ u }}"><i class="pn-ico" style="--ico:url('{% static 'img/admin/anadir.svg' %}')"></i><span>Nueva convocatoria<small>Publicar una beca</small></span></a>{% endif %}
+                {% url 'admin:usuarios_usuario_add' as u %}{% if u %}
+                <a href="{{ u }}"><i class="pn-ico" style="--ico:url('{% static 'img/admin/usuario.svg' %}')"></i><span>Nuevo usuario<small>Estudiante, comité o admin</small></span></a>{% endif %}
+                {% url 'admin:evaluaciones_comite_add' as u %}{% if u %}
+                <a href="{{ u }}"><i class="pn-ico" style="--ico:url('{% static 'img/admin/grupos_comites.svg' %}')"></i><span>Nuevo comité<small>Asignar evaluadores</small></span></a>{% endif %}
+                {% url 'admin:solicitudes_solicitud_changelist' as u %}{% if u %}
+                <a href="{{ u }}?estado__exact=PENDIENTE"><i class="pn-ico" style="--ico:url('{% static 'img/admin/reloj.svg' %}')"></i><span>Revisar pendientes<small>Solicitudes sin evaluar</small></span></a>{% endif %}
+            </div>
+            <div class="pn-mini-dato">
+                <span>Evaluaciones registradas</span><b>{{ d.evaluaciones }}</b>
+            </div>
+            <div class="pn-mini-dato">
+                <span>Puntaje promedio</span><b>{% if d.promedio is not None %}{{ d.promedio }}{% else %}—{% endif %}</b>
+            </div>
+        </section>
+
+        <!-- ===== Actividad reciente (registro de Django) ===== -->
+        <section class="pn-caja pn-caja-completa">
+            <div class="pn-caja-cabeza"><div><h2>Mi actividad reciente</h2><p>Cambios que hiciste en el panel</p></div></div>
+            {% get_admin_log 6 as admin_log for_user user %}
+            {% if admin_log %}
+            <ul class="pn-actividad">
+                {% for entry in admin_log %}
+                <li class="{% if entry.is_addition %}alta{% elif entry.is_change %}cambio{% else %}baja{% endif %}">
+                    <i></i>
+                    <span>
+                        {% if entry.is_deletion or not entry.get_admin_url %}<strong>{{ entry.object_repr }}</strong>{% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>{% endif %}
+                        <small>{% if entry.is_addition %}Agregado{% elif entry.is_change %}Modificado{% else %}Eliminado{% endif %} · {{ entry.content_type.name|capfirst }} · {{ entry.action_time|timesince }}</small>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="pn-vacio">Aquí verás lo que agregues, modifiques o elimines desde el panel.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{# Página de una sección del panel (por ejemplo /admin/convocatorias/) — Byron. #}
+
+{% block bodyclass %}{{ block.super }} app-{{ app_label }} pn-app-index{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumbs">
+    <li><a href="{% url 'admin:index' %}">Inicio</a></li>
+    <li aria-current="page">{% for app in app_list %}{{ app.name }}{% endfor %}</li>
+</ol>
+{% endblock %}
+
+{% block content_title %}
+<h1>{% for app in app_list %}{{ app.name }}{% endfor %}</h1>
+<p class="pn-subtitulo">Elige qué quieres administrar en esta sección.</p>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="pn-modulos">
+    {% for app in app_list %}{% for model in app.models %}
+    <div class="pn-modulo">
+        <span class="pn-tarjeta-icono pn-color-azul"><i class="pn-ico" style="--ico:url('{% static 'img/admin/plantillas.svg' %}')"></i></span>
+        <div>
+            <h2>{{ model.name }}</h2>
+            <div class="pn-modulo-botones">
+                {% if model.admin_url %}<a href="{{ model.admin_url }}" class="pn-boton-suave">Ver lista</a>{% endif %}
+                {% if model.add_url %}<a href="{{ model.add_url }}" class="pn-boton-suave">Añadir</a>{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}{% endfor %}
+</div>
+{% endblock %}
