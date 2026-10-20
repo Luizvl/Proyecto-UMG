@@ -1,9 +1,3 @@
-"""
-Patrón de diseño: FACADE (estructural)
-
-SolicitudService centraliza la lógica de negocio relacionada
-con las solicitudes de beca.
-"""
 
 from django.core.exceptions import ValidationError
 
@@ -21,6 +15,7 @@ class SolicitudService:
     def crear_solicitud(
         estudiante,
         convocatoria: Convocatoria,
+        motivo: str = "",
     ) -> Solicitud:
         """
         Crea una solicitud validando las reglas de negocio.
@@ -39,9 +34,17 @@ class SolicitudService:
                 "El estudiante ya tiene una solicitud para esta convocatoria."
             )
 
+        motivo = motivo.strip()
+
+        if len(motivo) > 1000:
+            raise ValidationError(
+                "El motivo no puede superar los 1000 caracteres."
+            )
+
         return Solicitud.objects.create(
             estudiante=estudiante,
             convocatoria=convocatoria,
+            motivo=motivo,
         )
 
     @staticmethod
