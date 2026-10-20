@@ -194,13 +194,16 @@ class SolicitudViewSet(viewsets.ModelViewSet):
         )
 
         try:
-            solicitud = (
-                SolicitudService.crear_solicitud(
-                    estudiante,
-                    convocatoria,
-                )
-            )
-
+           solicitud = (
+    SolicitudService.crear_solicitud(
+        estudiante,
+        convocatoria,
+        motivo=request.data.get(
+            "motivo",
+            "",
+        ),
+    )
+)
         except DjangoValidationError as exc:
             return Response(
                 {

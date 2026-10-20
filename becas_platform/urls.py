@@ -1,20 +1,29 @@
-from django.contrib import admin
-from django.urls import path, include
-
-# 1. Agregamos estas dos importaciones vitales
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-    # Módulos de la aplicación
-    path('', include('apps.paginas.urls')),
-    path('convocatorias/', include(('apps.convocatorias.urls_web', 'convocatorias'), namespace='convocatorias')),
-    path('solicitudes/', include(('apps.solicitudes.urls_web', 'solicitudes'), namespace='solicitudes')),
-    path('usuarios/', include(('apps.usuarios.urls', 'usuarios'), namespace='usuarios')),
+    # Administración
+    path("admin/", admin.site.urls),
+
+    # Páginas públicas
+    path("", include("apps.paginas.urls")),
+
+    # Frontend web
+    path("convocatorias/", include(("apps.convocatorias.urls_web", "convocatorias"), namespace="convocatorias")),
+    path("solicitudes/", include(("apps.solicitudes.urls_web", "solicitudes"), namespace="solicitudes")),
+    path("usuarios/", include(("apps.usuarios.urls", "usuarios"), namespace="usuarios")),
+
+    # API REST (Incluye las rutas para la Inteligencia Artificial)
+    path("api/", include("apps.convocatorias.urls")),
+    path("api/", include("apps.solicitudes.urls")),
+    path("api/", include("apps.evaluaciones.urls")),
+
+    # Autenticación navegable de DRF
+    path("api-auth/", include("rest_framework.urls")),
 ]
 
-# 2. Agregamos el puente para los archivos multimedia en modo desarrollo
+# Puente para servir archivos PDF e imágenes en modo desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
