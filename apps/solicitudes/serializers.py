@@ -115,16 +115,17 @@ class SolicitudSerializer(
         model = Solicitud
 
         fields = [
-            "id",
-            "estudiante",
-            "convocatoria",
-            "estado",
-            "motivo_rechazo",
-            "fecha_creacion",
-            "fecha_actualizacion",
-            "documentos",
-            "historial",
-        ]
+    "id",
+    "estudiante",
+    "convocatoria",
+    "estado",
+    "motivo",
+    "motivo_rechazo",
+    "fecha_creacion",
+    "fecha_actualizacion",
+    "documentos",
+    "historial",
+                ]
 
         read_only_fields = [
             "estado",

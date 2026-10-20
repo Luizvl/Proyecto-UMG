@@ -29,8 +29,21 @@ class Solicitud(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="solicitudes"
     )
     convocatoria = models.ForeignKey(Convocatoria, on_delete=models.CASCADE, related_name="solicitudes")
-    estado = models.CharField(max_length=20, choices=ESTADOS, default=PENDIENTE)
-    motivo_rechazo = models.TextField(blank=True)
+    estado = models.CharField(
+    max_length=20,
+    choices=ESTADOS,
+    default=PENDIENTE,
+    )
+
+# Motivo escrito por el estudiante al solicitar la beca.
+    motivo = models.TextField(
+    max_length=1000,
+    default="",
+    )
+
+    motivo_rechazo = models.TextField(
+    blank=True
+)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
