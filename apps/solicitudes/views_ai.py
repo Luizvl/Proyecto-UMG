@@ -45,9 +45,7 @@ def mejorar_motivo_ia(request):
 
     if not isinstance(texto, str):
         return Response(
-            {
-                "detail": "El campo texto debe ser una cadena de texto."
-            },
+            {"detail": "El campo texto debe ser una cadena de texto."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -55,9 +53,7 @@ def mejorar_motivo_ia(request):
 
     if not texto:
         return Response(
-            {
-                "detail": "Debe escribir un motivo antes de mejorarlo."
-            },
+            {"detail": "Debe escribir un motivo antes de mejorarlo."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -73,19 +69,16 @@ def mejorar_motivo_ia(request):
         )
 
     try:
-        texto_mejorado = GeminiService.mejorar_motivo(
-            texto
-        )
+        texto_mejorado = GeminiService.mejorar_motivo(texto)
 
     except ValueError as exc:
         return Response(
-            {
-                "detail": str(exc)
-            },
+            {"detail": str(exc)},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    except RuntimeError:
+    except RuntimeError as exc:
+        print(f"🔥 ERROR RUNTIME DE GEMINI: {exc}")
         return Response(
             {
                 "detail": (
@@ -96,9 +89,10 @@ def mejorar_motivo_ia(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
-    except Exception:
-        # Evitamos mostrar al usuario datos internos
-        # provenientes de la API externa.
+    except Exception as exc:
+        # Se imprime el error real en la terminal para depurar,
+        # sin mostrarlo al usuario.
+        print(f"🔥 ERROR REAL DE GEMINI: {exc}")
         return Response(
             {
                 "detail": (
@@ -110,8 +104,6 @@ def mejorar_motivo_ia(request):
         )
 
     return Response(
-        {
-            "texto_mejorado": texto_mejorado
-        },
+        {"texto_mejorado": texto_mejorado},
         status=status.HTTP_200_OK,
     )

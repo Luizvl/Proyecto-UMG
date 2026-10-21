@@ -1,8 +1,6 @@
 from django.conf import settings
-
 from google import genai
 from google.genai import types
-
 
 class GeminiService:
     """
@@ -64,15 +62,18 @@ Reglas obligatorias:
 Si el texto original es breve, mejóralo sin agregar hechos nuevos.
 """
 
+        # Limpiamos cualquier salto de línea o espacio invisible de Windows
+        modelo_limpio = settings.GEMINI_MODEL.strip() if settings.GEMINI_MODEL else "gemini-1.5-flash"
+
         response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+            model="gemini-3.8-flash",  # ¡La versión correcta que pide Google!
             contents=texto,
             config=types.GenerateContentConfig(
-            system_instruction=instrucciones,
-             max_output_tokens=500,
+                system_instruction=instrucciones,
+                max_output_tokens=500,
             ),
         )
-
+        
         texto_mejorado = (response.text or "").strip()
 
         if not texto_mejorado:

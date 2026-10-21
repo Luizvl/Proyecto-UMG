@@ -48,10 +48,19 @@
             {% csrf_token %}
 
             <!-- Motivo -->
-            <div class="ap-campo-head">
-                <label for="{{ form.motivo.id_for_label }}">Motivo de la solicitud <span class="req">*</span></label>
-                <span class="ap-contador" data-contador>0 / 1,000</span>
+            <div class="ap-campo-head" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                <div>
+                    <label for="{{ form.motivo.id_for_label }}" style="margin-bottom: 0;">Motivo de la solicitud <span class="req">*</span></label>
+                    <span class="ap-contador" data-contador style="display: block; font-size: 0.85em; color: #6b7280;">0 / 1,000</span>
+                </div>
+                
+                <!-- Botón de Inteligencia Artificial -->
+                <button type="button" id="btn-ia-mejorar" style="background-color: #4f46e5; color: white; border-radius: 20px; padding: 6px 14px; border: none; font-size: 0.85em; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3); transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    Mejorar con IA
+                </button>
             </div>
+            
             <textarea name="{{ form.motivo.html_name }}" id="{{ form.motivo.id_for_label }}" rows="5" maxlength="1000"
                       class="{% if form.motivo.errors %}con-error{% endif %}" data-motivo
                       placeholder="Explica brevemente por qué solicitas esta beca, tus objetivos académicos y cómo se relaciona con tu desarrollo profesional...">{{ form.motivo.value|default:'' }}</textarea>
@@ -61,7 +70,7 @@
             </p>
 
             <!-- Documento -->
-            <label class="ap-label">Documento de respaldo (PDF) <span class="req">*</span></label>
+            <label class="ap-label" style="margin-top: 20px; display: block;">Documento de respaldo (PDF) <span class="req">*</span></label>
             <label class="ap-drop {% if form.documento.errors %}con-error{% endif %}" data-drop>
                 <input type="file" name="{{ form.documento.html_name }}" accept=".pdf,application/pdf" data-archivo hidden>
                 <div class="ap-drop-vacio">
@@ -140,8 +149,8 @@ var input = document.querySelector('[data-archivo]');
 var drop = document.querySelector('[data-drop]');
 var errArchivo = document.querySelector('[data-error-archivo]');
 
-// CORRECCIÓN AL ERROR DE SINTAXIS DE BYRON: 5MB en bytes
-var MAX = 5 * 1024 * 1024; 
+// CORRECCIÓN: 5MB exactos en bytes (5 * 1024 * 1024)
+var MAX = 5242880; 
 
 function marcarPaso(n, ok) { document.querySelector('[data-paso="' + n + '"]').classList.toggle('ok', ok); }
 function mostrarError(p, msg) { p.querySelector('span').textContent = msg; p.hidden = false; }
@@ -157,6 +166,73 @@ function revisarMotivo() {
 }
 motivo.addEventListener('input', revisarMotivo);
 
+/* ---- INTEGRACIÓN IA: Botón Mejorar con IA ---- */
+document.addEventListener("DOMContentLoaded", function() {
+    const btnIA = document.getElementById("btn-ia-mejorar");
+    
+    if (btnIA && motivo) {
+        btnIA.addEventListener("click", async function() {
+            const textoOriginal = motivo.value.trim();
+
+            if (textoOriginal.length < 15) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Demasiado corto',
+                    text: 'Escribe un poco más sobre ti para que la IA tenga contexto.',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Mejorando redacción...',
+                html: 'Aplicando formato profesional...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // Se asume que la URL se llama 'mejorar_texto_ia' dentro de 'solicitudes'
+                const response = await fetch("{% url 'solicitudes:mejorar_motivo_ia' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ texto: textoOriginal })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.texto_mejorado) {
+                    motivo.value = data.texto_mejorado;
+                    revisarMotivo(); // Actualiza el contador
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Listo!',
+                        text: 'Tu texto ha sido mejorado.',
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error(data.error || "Error al procesar");
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No pudimos conectar con la IA. Por favor, inténtalo de nuevo.',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        });
+    }
+});
+
 /* ---- Archivo: seleccionar, arrastrar, validar ---- */
 function validarArchivo(f) {
     if (!f) return 'Debes adjuntar un archivo PDF.';
@@ -170,7 +246,6 @@ function mostrarArchivo() {
     var error = f ? validarArchivo(f) : '';
     var lleno = !!f && !error;
     
-    // INTEGRACIÓN SWEETALERT2: Alerta visual instantánea si hay error
     if (error && f) {
         Swal.fire({
             icon: 'error',
@@ -198,16 +273,21 @@ function mostrarArchivo() {
     marcarPaso(2, lleno);
     actualizarPaso3();
 }
+
 input.addEventListener('change', mostrarArchivo);
+
 ['dragenter', 'dragover'].forEach(function (ev) {
     drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('arrastrando'); });
 });
+
 ['dragleave', 'drop'].forEach(function (ev) {
     drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('arrastrando'); });
 });
+
 drop.addEventListener('drop', function (e) {
     if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; mostrarArchivo(); }
 });
+
 document.querySelector('[data-quitar]').addEventListener('click', function (e) {
     e.preventDefault(); input.value = ''; mostrarArchivo();
 });
@@ -229,7 +309,6 @@ document.querySelector('[data-form]').addEventListener('submit', function (e) {
         e.preventDefault();
         (motivo.classList.contains('con-error') ? motivo : drop).scrollIntoView({ block: 'center', behavior: 'smooth' });
     } else {
-        // INTEGRACIÓN SWEETALERT2: Pantalla de carga profesional
         Swal.fire({
             title: 'Procesando tu solicitud...',
             html: 'Subiendo expediente seguro',
