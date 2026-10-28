@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Recuperar contraseña | PNGIB{% endblock %}
+
+{% block contenido %}
+<section class="auth-pagina">
+    {% include "usuarios/_auth_tarjeta_inicio.html" %}
+        <h1>¿Olvidaste tu contraseña?</h1>
+        <p class="auth-subtitulo">
+            Escribe el correo con el que te registraste y te enviaremos un enlace para crear una nueva.
+        </p>
+
+        <form method="post" class="login-form" novalidate>
+            {% csrf_token %}
+            <label for="{{ form.email.id_for_label }}">Correo electrónico:</label>
+            <div class="campo {% if form.email.errors %}campo-error{% endif %}">
+                <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+                       value="{{ form.email.value|default:'' }}" placeholder="tucorreo@ejemplo.com"
+                       autocomplete="email" required autofocus>
+            </div>
+            {% for e in form.email.errors %}<p class="campo-mensaje">{{ e }}</p>{% endfor %}
+
+            <button type="submit" class="boton-primario boton-login">Enviar enlace &rarr;</button>
+        </form>
+
+        <p class="login-registro"><a href="{% url 'usuarios:login' %}">&larr; Volver a iniciar sesión</a></p>
+    </div>
+</section>
+{% endblock %}

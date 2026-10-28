@@ -7,100 +7,294 @@ from apps.convocatorias.models import Convocatoria
 class Solicitud(models.Model):
     """
     Entidad de dominio: Solicitud de beca.
-
-    El campo `estado` se gestiona a través del patrón State
-    (ver states.py) para no dispersar reglas de transición
-    (qué cambios de estado son válidos) en las vistas o servicios.
     """
 
     PENDIENTE = "PENDIENTE"
     EN_EVALUACION = "EN_EVALUACION"
+    PENDIENTE_SEGUNDA_APROBACION = "PENDIENTE_SEGUNDA_APROBACION"
     APROBADA = "APROBADA"
     RECHAZADA = "RECHAZADA"
 
     ESTADOS = [
         (PENDIENTE, "Pendiente"),
         (EN_EVALUACION, "En Evaluación"),
+        (
+            PENDIENTE_SEGUNDA_APROBACION,
+            "Pendiente de segunda aprobación",
+        ),
         (APROBADA, "Aprobada"),
         (RECHAZADA, "Rechazada"),
     ]
 
     estudiante = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="solicitudes"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="solicitudes",
     )
-    convocatoria = models.ForeignKey(Convocatoria, on_delete=models.CASCADE, related_name="solicitudes")
-    estado = models.CharField(max_length=20, choices=ESTADOS, default=PENDIENTE)
-    motivo_rechazo = models.TextField(blank=True)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    convocatoria = models.ForeignKey(
+        Convocatoria,
+        on_delete=models.CASCADE,
+        related_name="solicitudes",
+    )
+
+    estado = models.CharField(
+        max_length=35,
+        choices=ESTADOS,
+        default=PENDIENTE,
+    )
+
+    motivo = models.TextField(
+        max_length=1000,
+        default="",
+    )
+
+    monto_solicitado = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+    )
+
+    primer_aprobador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="solicitudes_primera_aprobacion",
+    )
+
+    fecha_primera_aprobacion = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    segundo_aprobador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="solicitudes_segunda_aprobacion",
+    )
+
+    fecha_segunda_aprobacion = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    motivo_rechazo = models.TextField(
+        blank=True,
+    )
+
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    fecha_actualizacion = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Solicitud"
         verbose_name_plural = "Solicitudes"
-        unique_together = ("estudiante", "convocatoria")
-        ordering = ["-fecha_creacion"]
+        unique_together = (
+            "estudiante",
+            "convocatoria",
+        )
+        ordering = [
+            "-fecha_creacion"
+        ]
 
     def __str__(self):
-        return f"Solicitud #{self.pk} - {self.estudiante} - {self.get_estado_display()}"
+        return (
+            f"Solicitud #{self.pk} - "
+            f"{self.estudiante} - "
+            f"{self.get_estado_display()}"
+        )
 
-    # --- Delegación al patrón State ---
-    # El modelo no decide si una transición es válida; delega esa
-    # responsabilidad al objeto de estado correspondiente.
     def _get_state(self):
         from .states import obtener_estado
-        return obtener_estado(self.estado)
+
+        return obtener_estado(
+            self.estado
+        )
 
     def iniciar_evaluacion(self):
-        self._get_state().iniciar_evaluacion(self)
+        self._get_state().iniciar_evaluacion(
+            self
+        )
 
     def aprobar(self):
-        self._get_state().aprobar(self)
+        self._get_state().aprobar(
+            self
+        )
 
-    def rechazar(self, motivo: str = ""):
-        self._get_state().rechazar(self, motivo)
+    def solicitar_segunda_aprobacion(self):
+        self._get_state().solicitar_segunda_aprobacion(
+            self
+        )
+
+    def rechazar(
+        self,
+        motivo: str = "",
+    ):
+        self._get_state().rechazar(
+            self,
+            motivo,
+        )
 
 
 class HistorialEstado(models.Model):
-    """Bitácora de cambios de estado, usada para trazabilidad (HU-14)."""
-    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name="historial")
-    estado_anterior = models.CharField(max_length=20)
-    estado_nuevo = models.CharField(max_length=20)
-    fecha = models.DateTimeField(auto_now_add=True)
-    comentario = models.CharField(max_length=255, blank=True)
+    """
+    Bitácora de cambios de estado de una solicitud.
+    """
+
+    solicitud = models.ForeignKey(
+        Solicitud,
+        on_delete=models.CASCADE,
+        related_name="historial",
+    )
+
+    estado_anterior = models.CharField(
+        max_length=35,
+    )
+
+    estado_nuevo = models.CharField(
+        max_length=35,
+    )
+
+    fecha = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    comentario = models.CharField(
+        max_length=255,
+        blank=True,
+    )
 
     class Meta:
-        ordering = ["-fecha"]
+        ordering = [
+            "-fecha"
+        ]
 
     def __str__(self):
-        return f"{self.solicitud_id}: {self.estado_anterior} -> {self.estado_nuevo}"
+        return (
+            f"{self.solicitud_id}: "
+            f"{self.estado_anterior} -> "
+            f"{self.estado_nuevo}"
+        )
 
 
-def ruta_documento(instance, filename):
-    return f"solicitudes/{instance.solicitud_id}/{filename}"
+class Notificacion(models.Model):
+    """
+    Notificación generada automáticamente cuando
+    cambia el estado de una solicitud.
+    """
+
+    destinatario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notificaciones",
+    )
+
+    solicitud = models.ForeignKey(
+        Solicitud,
+        on_delete=models.CASCADE,
+        related_name="notificaciones",
+    )
+
+    mensaje = models.CharField(
+        max_length=255,
+    )
+
+    leida = models.BooleanField(
+        default=False,
+    )
+
+    fecha = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = "Notificación"
+        verbose_name_plural = "Notificaciones"
+        ordering = [
+            "-fecha"
+        ]
+
+    def __str__(self):
+        return (
+            f"Notificación para "
+            f"{self.destinatario} - "
+            f"Solicitud #{self.solicitud_id}"
+        )
+
+
+def ruta_documento(
+    instance,
+    filename,
+):
+    return (
+        f"solicitudes/"
+        f"{instance.solicitud_id}/"
+        f"{filename}"
+    )
 
 
 class Documento(models.Model):
-    """Documento de respaldo cargado a una solicitud (HU-08)."""
+    """
+    Documento de respaldo cargado a una solicitud.
+    """
 
     TIPO_DPI = "DPI"
     TIPO_CONSTANCIA = "CONSTANCIA_ESTUDIOS"
     TIPO_NOTAS = "NOTAS"
     TIPO_OTRO = "OTRO"
+
     TIPOS = [
-        (TIPO_DPI, "DPI / Documento de identificación"),
-        (TIPO_CONSTANCIA, "Constancia de estudios"),
-        (TIPO_NOTAS, "Historial de notas"),
-        (TIPO_OTRO, "Otro"),
+        (
+            TIPO_DPI,
+            "DPI / Documento de identificación",
+        ),
+        (
+            TIPO_CONSTANCIA,
+            "Constancia de estudios",
+        ),
+        (
+            TIPO_NOTAS,
+            "Historial de notas",
+        ),
+        (
+            TIPO_OTRO,
+            "Otro",
+        ),
     ]
 
-    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name="documentos")
-    tipo = models.CharField(max_length=25, choices=TIPOS, default=TIPO_OTRO)
-    archivo = models.FileField(upload_to=ruta_documento)
-    fecha_carga = models.DateTimeField(auto_now_add=True)
+    solicitud = models.ForeignKey(
+        Solicitud,
+        on_delete=models.CASCADE,
+        related_name="documentos",
+    )
+
+    tipo = models.CharField(
+        max_length=25,
+        choices=TIPOS,
+        default=TIPO_OTRO,
+    )
+
+    archivo = models.FileField(
+        upload_to=ruta_documento,
+    )
+
+    fecha_carga = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     class Meta:
         verbose_name = "Documento"
         verbose_name_plural = "Documentos"
 
     def __str__(self):
-        return f"{self.get_tipo_display()} - Solicitud #{self.solicitud_id}"
+        return (
+            f"{self.get_tipo_display()} - "
+            f"Solicitud #{self.solicitud_id}"
+        )

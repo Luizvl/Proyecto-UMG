@@ -1,0 +1,93 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración | PNGIB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin-pngib.css' %}">
+</head>
+<body class="adm-login-body">
+{# Plantilla que reemplaza la pantalla de login de /admin/. La lógica sigue siendo la de Django. #}
+
+<main class="adm-login">
+
+    <!-- ===== Columna izquierda ===== -->
+    <section class="adm-intro">
+        <a href="{% url 'inicio' %}" class="adm-marca">PNGIB</a>
+        <p class="adm-marca-sub">Plataforma Nacional para la Gestión<br>Integral de Becas</p>
+        <span class="adm-linea"></span>
+
+        <h1>Administración del Sistema</h1>
+        <p class="adm-intro-texto">Accede al panel de administración para gestionar convocatorias, solicitudes, usuarios y más.</p>
+
+        <ul class="adm-puntos">
+            <li><img src="{% static 'img/admin-icono-datos.webp' %}" alt=""><div><b>Gestión de datos</b><span>Convocatorias, solicitudes y usuarios</span></div></li>
+            <li><img src="{% static 'img/admin-icono-seguridad.webp' %}" alt=""><div><b>Seguridad</b><span>Acceso restringido para administradores</span></div></li>
+            <li><img src="{% static 'img/admin-icono-control.webp' %}" alt=""><div><b>Control y seguimiento</b><span>Monitorea el funcionamiento del sistema</span></div></li>
+        </ul>
+
+        <img src="{% static 'img/admin-edificio.webp' %}" alt="" class="adm-edificio" aria-hidden="true">
+    </section>
+
+    <!-- ===== Tarjeta de acceso ===== -->
+    <section class="adm-tarjeta">
+        <img src="{% static 'img/admin-escudo.webp' %}" alt="" class="adm-escudo">
+        <h2>Administración de PNGIB</h2>
+        <p class="adm-sub">Ingresa con tu cuenta de administrador</p>
+
+        {% if user.is_authenticated %}
+            <div class="adm-aviso adm-aviso-info">
+                Iniciaste sesión como <b>{{ user.email|default:user.username }}</b>, pero esa cuenta no tiene permiso para entrar aquí.
+                Ingresa con una cuenta de administrador o <a href="{% url 'usuarios:panel' %}">vuelve a tu panel</a>.
+            </div>
+        {% endif %}
+        {% if form.errors %}
+            <div class="adm-aviso">Correo o contraseña incorrectos, o la cuenta no es de administrador.</div>
+        {% endif %}
+
+        <form action="{{ app_path }}" method="post" id="login-form" novalidate>
+            {% csrf_token %}
+            <label for="id_username">Correo electrónico</label>
+            <div class="adm-campo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                <input type="email" name="username" id="id_username" value="{{ form.username.value|default:'' }}"
+                       placeholder="admin@pngib.gob.gt" autocomplete="username" required autofocus>
+            </div>
+
+            <label for="id_password">Contraseña</label>
+            <div class="adm-campo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <input type="password" name="password" id="id_password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+                <button type="button" class="adm-ojo" aria-label="Mostrar contraseña" data-ojo>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+
+            <div class="adm-fila">
+                <a href="{% url 'usuarios:recuperar' %}">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="adm-boton">Iniciar sesión <span>&rarr;</span></button>
+        </form>
+
+        <p class="adm-pie">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.4 7 10 4-1.6 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg>
+            Acceso exclusivo para administradores autorizados
+        </p>
+    </section>
+</main>
+
+<script>
+document.querySelector('[data-ojo]').addEventListener('click', function () {
+    var i = document.getElementById('id_password'), ver = i.type === 'password';
+    i.type = ver ? 'text' : 'password';
+    this.classList.toggle('activo', ver);
+    this.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña');
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import tempfile
-
 from datetime import date, timedelta
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
@@ -799,4 +799,535 @@ class ReglasNegocioSolicitudTests(APITestCase):
         self.assertEqual(
             solicitud.estado,
             Solicitud.APROBADA,
+        )
+
+
+class MejorarMotivoIATests(APITestCase):
+
+    def setUp(self):
+        self.estudiante = Usuario.objects.create_user(
+            username="estudiante_ia",
+            email="estudiante.ia@test.com",
+            password="Prueba12345",
+            dpi="1234567890991",
+            rol=Usuario.Rol.ESTUDIANTE,
+            nivel_academico=Usuario.NivelAcademico.UNIVERSITARIO,
+        )
+
+        self.comite = Usuario.objects.create_user(
+            username="comite_ia",
+            email="comite.ia@test.com",
+            password="Prueba12345",
+            rol=Usuario.Rol.COMITE,
+        )
+
+        self.url = reverse(
+            "solicitudes:mejorar_motivo_ia"
+        )
+
+    @patch(
+        "apps.solicitudes.views_ai."
+        "GeminiService.mejorar_motivo"
+    )
+    def test_estudiante_puede_mejorar_motivo(
+        self,
+        mock_mejorar,
+    ):
+        mock_mejorar.return_value = (
+            "Solicito esta beca para continuar "
+            "con mis estudios y alcanzar mis objetivos académicos."
+        )
+
+        self.client.force_authenticate(
+            user=self.estudiante
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "texto": (
+                    "quiero la beca para seguir "
+                    "estudiando"
+                )
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertIn(
+            "texto_mejorado",
+            response.data,
+        )
+
+        mock_mejorar.assert_called_once_with(
+            "quiero la beca para seguir estudiando"
+        )
+
+    def test_requiere_autenticacion(self):
+        response = self.client.post(
+            self.url,
+            {
+                "texto": "Necesito apoyo para mis estudios."
+            },
+            format="json",
+        )
+
+        self.assertIn(
+            response.status_code,
+            [
+                status.HTTP_401_UNAUTHORIZED,
+                status.HTTP_403_FORBIDDEN,
+            ],
+        )
+
+    def test_comite_no_puede_usar_herramienta(self):
+        self.client.force_authenticate(
+            user=self.comite
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "texto": "Texto de prueba."
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    def test_no_permite_texto_vacio(self):
+        self.client.force_authenticate(
+            user=self.estudiante
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "texto": ""
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    def test_no_permite_texto_mayor_a_1000_caracteres(self):
+        self.client.force_authenticate(
+            user=self.estudiante
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "texto": "a" * 1001
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    @patch(
+        "apps.solicitudes.views_ai."
+        "GeminiService.mejorar_motivo"
+    )
+    def test_error_de_gemini_devuelve_503(
+        self,
+        mock_mejorar,
+    ):
+        mock_mejorar.side_effect = RuntimeError(
+            "Gemini no disponible"
+        )
+
+        self.client.force_authenticate(
+            user=self.estudiante
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "texto": "Necesito apoyo para estudiar."
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+
+class MotivoSolicitudTests(APITestCase):
+
+    def setUp(self):
+        self.estudiante = Usuario.objects.create_user(
+            username="estudiante_motivo",
+            email="estudiante.motivo@test.com",
+            password="Prueba12345",
+            dpi="1234567890992",
+            rol=Usuario.Rol.ESTUDIANTE,
+            nivel_academico=Usuario.NivelAcademico.UNIVERSITARIO,
+        )
+
+        self.convocatoria = Convocatoria.objects.create(
+            nombre="Convocatoria motivo",
+            tipo_beca=Convocatoria.TIPO_UNIVERSITARIO,
+            descripcion="Prueba de almacenamiento del motivo",
+            fecha_inicio=date.today(),
+            fecha_fin=date.today() + timedelta(days=30),
+            cupo=10,
+            estado=Convocatoria.ESTADO_ACTIVA,
+        )
+
+    def test_motivo_se_guarda_en_solicitud(self):
+        self.client.force_authenticate(
+            user=self.estudiante
+        )
+
+        motivo = (
+            "Solicito esta beca porque necesito apoyo "
+            "para continuar con mis estudios."
+        )
+
+        response = self.client.post(
+            reverse("solicitud-list"),
+            {
+                "convocatoria": self.convocatoria.id,
+                "motivo": motivo,
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+
+        solicitud = Solicitud.objects.get(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+        )
+
+        self.assertEqual(
+            solicitud.motivo,
+            motivo,
+        )
+
+        self.assertEqual(
+            response.data["motivo"],
+            motivo,
+        )
+
+
+class DobleAprobacionTests(APITestCase):
+
+    def setUp(self):
+        self.estudiante = Usuario.objects.create_user(
+            username="estudiante_doble",
+            email="estudiante_doble@test.com",
+            password="Prueba12345",
+            dpi="1234567890701",
+            rol=Usuario.Rol.ESTUDIANTE,
+            nivel_academico=Usuario.NivelAcademico.UNIVERSITARIO,
+        )
+
+        self.aprobador1 = Usuario.objects.create_user(
+            username="aprobador1",
+            email="aprobador1@test.com",
+            password="Prueba12345",
+            rol=Usuario.Rol.COMITE,
+        )
+
+        self.aprobador2 = Usuario.objects.create_user(
+            username="aprobador2",
+            email="aprobador2@test.com",
+            password="Prueba12345",
+            rol=Usuario.Rol.COMITE,
+        )
+
+        self.convocatoria = Convocatoria.objects.create(
+            nombre="Convocatoria doble aprobación",
+            tipo_beca=Convocatoria.TIPO_UNIVERSITARIO,
+            descripcion="Prueba de doble aprobación",
+            fecha_inicio=date.today(),
+            fecha_fin=date.today() + timedelta(days=30),
+            cupo=10,
+            estado=Convocatoria.ESTADO_ACTIVA,
+        )
+
+        self.comite = Comite.objects.create(
+            nombre="Comité doble aprobación",
+            convocatoria=self.convocatoria,
+        )
+
+        self.comite.integrantes.add(
+            self.aprobador1,
+            self.aprobador2,
+        )
+
+    def iniciar_evaluacion(
+        self,
+        solicitud,
+    ):
+        self.client.force_authenticate(
+            user=self.aprobador1
+        )
+
+        response = self.client.post(
+            reverse(
+                "solicitud-iniciar-evaluacion",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+    def test_monto_menor_10000_requiere_una_aprobacion(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="8000.00",
+        )
+
+        self.iniciar_evaluacion(
+            solicitud
+        )
+
+        response = self.client.post(
+            reverse(
+                "solicitud-aprobar",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.APROBADA,
+        )
+
+        self.assertEqual(
+            solicitud.primer_aprobador,
+            self.aprobador1,
+        )
+
+        self.assertIsNotNone(
+            solicitud.fecha_primera_aprobacion
+        )
+
+        self.assertIsNone(
+            solicitud.segundo_aprobador
+        )
+
+        self.assertIsNone(
+            solicitud.fecha_segunda_aprobacion
+        )
+
+    def test_monto_exacto_10000_requiere_una_aprobacion(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="10000.00",
+        )
+
+        self.iniciar_evaluacion(
+            solicitud
+        )
+
+        response = self.client.post(
+            reverse(
+                "solicitud-aprobar",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.APROBADA,
+        )
+
+        self.assertEqual(
+            solicitud.primer_aprobador,
+            self.aprobador1,
+        )
+
+        self.assertIsNotNone(
+            solicitud.fecha_primera_aprobacion
+        )
+
+        self.assertIsNone(
+            solicitud.segundo_aprobador
+        )
+
+    def test_monto_mayor_10000_requiere_dos_aprobaciones(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="15000.00",
+        )
+
+        self.iniciar_evaluacion(
+            solicitud
+        )
+
+        primera = self.client.post(
+            reverse(
+                "solicitud-aprobar",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            primera.status_code,
+            status.HTTP_200_OK,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.PENDIENTE_SEGUNDA_APROBACION,
+        )
+
+        self.assertEqual(
+            solicitud.primer_aprobador,
+            self.aprobador1,
+        )
+
+        self.assertIsNotNone(
+            solicitud.fecha_primera_aprobacion
+        )
+
+        self.assertIsNone(
+            solicitud.segundo_aprobador
+        )
+
+        self.client.force_authenticate(
+            user=self.aprobador2
+        )
+
+        segunda = self.client.post(
+            reverse(
+                "solicitud-aprobar",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            segunda.status_code,
+            status.HTTP_200_OK,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.APROBADA,
+        )
+
+        self.assertEqual(
+            solicitud.primer_aprobador,
+            self.aprobador1,
+        )
+
+        self.assertEqual(
+            solicitud.segundo_aprobador,
+            self.aprobador2,
+        )
+
+        self.assertIsNotNone(
+            solicitud.fecha_primera_aprobacion
+        )
+
+        self.assertIsNotNone(
+            solicitud.fecha_segunda_aprobacion
+        )
+
+    def test_misma_persona_no_puede_aprobar_dos_veces(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="15000.00",
+        )
+
+        self.iniciar_evaluacion(
+            solicitud
+        )
+
+        primera = self.client.post(
+            reverse(
+                "solicitud-aprobar",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            primera.status_code,
+            status.HTTP_200_OK,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.PENDIENTE_SEGUNDA_APROBACION,
+        )
+
+        segunda = self.client.post(
+            reverse(
+                "solicitud-aprobar",
+                args=[solicitud.id],
+            )
+        )
+
+        self.assertEqual(
+            segunda.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.PENDIENTE_SEGUNDA_APROBACION,
+        )
+
+        self.assertEqual(
+            solicitud.primer_aprobador,
+            self.aprobador1,
+        )
+
+        self.assertIsNone(
+            solicitud.segundo_aprobador
+        )
+
+        self.assertIsNone(
+            solicitud.fecha_segunda_aprobacion
         )

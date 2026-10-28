@@ -1,0 +1,104 @@
+{% extends "admin/base.html" %}
+{% load static panel_admin %}
+{# Estructura visual del panel interno de PNGIB — Byron. Solo cambia la presentación: #}
+{# las listas, formularios y permisos siguen siendo los de Django. #}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | Administración PNGIB{% endblock %}
+
+{% block dark-mode-vars %}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/admin-panel.css' %}">
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} pn-admin{% endblock %}
+
+{% block header %}
+<input type="checkbox" id="pn-menu" class="pn-menu-toggle" aria-label="Abrir menú">
+
+<!-- ===== Barra lateral ===== -->
+<aside class="pn-lateral" aria-label="Menú del panel">
+    <a class="pn-marca" href="{% url 'admin:index' %}">
+        <span class="pn-marca-logo"><i class="pn-ico" style="--ico:url('{% static 'img/admin/logo.svg' %}')"></i></span>
+        <span class="pn-marca-texto"><strong>PNGIB</strong><small>Panel administrativo</small></span>
+    </a>
+
+    <nav class="pn-menu">
+        <p class="pn-menu-seccion">Principal</p>
+        {% url 'admin:index' as url_inicio %}
+        <a href="{{ url_inicio }}" class="pn-menu-item{% if request.path == url_inicio %} activo{% endif %}">
+            <i class="pn-ico" style="--ico:url('{% static 'img/admin/inicio.svg' %}')"></i> Inicio
+        </a>
+
+        {% menu_admin available_apps request.path as secciones %}
+        {% for seccion, items in secciones %}
+            <p class="pn-menu-seccion">{{ seccion }}</p>
+            {% for item in items %}
+            <a href="{{ item.url }}" class="pn-menu-item{% if item.activo %} activo{% endif %}">
+                <i class="pn-ico" style="--ico:url('{% static 'img/admin/'|add:item.icono|add:'.svg' %}')"></i> {{ item.texto }}
+            </a>
+            {% endfor %}
+        {% endfor %}
+    </nav>
+
+    <div class="pn-lateral-pie">
+        {% if site_url %}
+        <a href="{{ site_url }}" class="pn-menu-item">
+            <i class="pn-ico" style="--ico:url('{% static 'img/admin/sitio.svg' %}')"></i> Ver sitio público
+        </a>
+        {% endif %}
+        <form method="post" action="{% url 'admin:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="pn-menu-item pn-salir">
+                <i class="pn-ico" style="--ico:url('{% static 'img/admin/salir.svg' %}')"></i> Cerrar sesión
+            </button>
+        </form>
+    </div>
+</aside>
+<label for="pn-menu" class="pn-velo" aria-hidden="true"></label>
+
+<!-- ===== Barra superior ===== -->
+<header id="header" class="pn-superior">
+    <label for="pn-menu" class="pn-hamburguesa" aria-label="Abrir menú"><span></span></label>
+    <nav class="pn-migas" aria-label="Ruta">
+        {% block breadcrumbs %}
+        <ol class="breadcrumbs">
+            <li><a href="{% url 'admin:index' %}">Inicio</a></li>
+            {% if title %}<li aria-current="page">{{ title }}</li>{% endif %}
+        </ol>
+        {% endblock %}
+    </nav>
+    {% if has_permission %}
+    <details class="pn-usuario">
+        <summary>
+            <span class="pn-avatar">{{ user.get_short_name|default:user.get_username|first|upper }}</span>
+            <span class="pn-usuario-datos">
+                <strong>{% firstof user.get_short_name user.get_username %}</strong>
+                <small>{% if user.get_rol_display %}{{ user.get_rol_display }}{% else %}Administrador{% endif %}</small>
+            </span>
+            <i class="pn-ico pn-ico-sm" style="--ico:url('{% static 'img/admin/chevron_abajo.svg' %}')"></i>
+        </summary>
+        <div class="pn-usuario-menu">
+            <p class="pn-usuario-correo">{{ user.email }}</p>
+            {% if site_url %}<a href="{{ site_url }}">Ver sitio público</a>{% endif %}
+            {% if user.has_usable_password %}<a href="{% url 'admin:password_change' %}">Cambiar contraseña</a>{% endif %}
+            <form method="post" action="{% url 'admin:logout' %}">
+                {% csrf_token %}
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        </div>
+    </details>
+    {% endif %}
+</header>
+{% endblock %}
+
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extrabody %}{{ block.super }}
+<script src="{% static 'js/admin-panel.js' %}"></script>
+{% endblock %}

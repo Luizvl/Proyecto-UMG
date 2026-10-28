@@ -3,9 +3,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.apps import apps
 
-from .models import Solicitud
+# ¡IMPORTANTE! Agregamos el modelo Documento a la importación
+from .models import Solicitud, Documento 
 from .forms import SolicitudForm
-
 
 def obtener_modelo_convocatoria():
     return apps.get_model('convocatorias', 'Convocatoria')
@@ -32,14 +32,24 @@ def aplicar_convocatoria(request, convocatoria_id):
             solicitud.estudiante = usuario_actual
             solicitud.convocatoria = convocatoria
 
-            # Asignación del estado borrador si existe el campo
-            if hasattr(Solicitud, 'Estado') and hasattr(Solicitud.Estado, 'BORRADOR'):
-                solicitud.estado = Solicitud.Estado.BORRADOR
-            elif hasattr(solicitud, 'estado'):
-                solicitud.estado = 'BORRADOR'
+            # CORRECCIÓN BUG #1: Usamos el estado oficial del modelo
+            solicitud.estado = Solicitud.PENDIENTE 
 
+            # Guardamos la solicitud principal en la base de datos
             solicitud.save()
-            form.save_m2m()
+            
+            # (Opcional) Si el formulario es ModelForm y tiene ManyToMany
+            if hasattr(form, 'save_m2m'):
+                form.save_m2m()
+
+            # CORRECCIÓN BUG #2: Guardar el PDF en la tabla correspondiente
+            archivo_pdf = request.FILES.get('documento')
+            if archivo_pdf:
+                Documento.objects.create(
+                    solicitud=solicitud,
+                    tipo=Documento.TIPO_OTRO,  # O puedes poner Documento.TIPO_CONSTANCIA
+                    archivo=archivo_pdf
+                )
 
             messages.success(request, "¡Tu solicitud ha sido enviada exitosamente!")
             return redirect('solicitudes:panel_estudiante')
@@ -65,5 +75,3 @@ def panel_estudiante(request):
         'usuario': usuario_actual,
     }
     return render(request, 'solicitudes/mis_solicitudes.html', contexto)
-
-  

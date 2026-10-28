@@ -1,0 +1,12 @@
+<script>
+/* Botón del ojo: alterna el campo de contraseña entre puntos y texto visible */
+document.querySelectorAll('.campo-ojo').forEach(function (boton) {
+    boton.addEventListener('click', function () {
+        var input = boton.parentElement.querySelector('input');
+        var mostrar = input.type === 'password';
+        input.type = mostrar ? 'text' : 'password';
+        boton.classList.toggle('activo', mostrar);
+        boton.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    });
+});
+</script>

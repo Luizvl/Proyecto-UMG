@@ -1,66 +1,197 @@
 """
 Patrón de diseño: STATE (comportamiento)
 
-Problema que resuelve:
-    El ciclo de vida de una Solicitud (Pendiente -> En Evaluación ->
-    Aprobada/Rechazada) tiene reglas distintas de "qué transiciones son
-    válidas" en cada momento. Sin este patrón, esas reglas terminan
-    como un bloque gigante de if/elif dentro de vistas o servicios,
-    difícil de mantener y de probar.
+Controla las transiciones válidas de una solicitud de beca.
 
-Alternativas consideradas:
-    - Un campo `estado` de texto libre validado con if/elif en el
-      servicio: simple al inicio, pero crece mal y mezcla
-      responsabilidades (validación + persistencia + notificación).
-    - Una máquina de estados con librería externa (django-fsm):
-      añade una dependencia extra que no se justifica para el
-      alcance del MVP.
+Además, cada cambio de estado:
+- Registra el evento en HistorialEstado.
+- Genera una notificación para el estudiante.
 
-Por qué State:
-    Cada estado es una clase con su propio comportamiento; agregar un
-    estado nuevo (ej. "EN_APELACION" en una futura iteración) no
-    obliga a tocar los demás, cumpliendo el principio Open/Closed.
+Flujo normal:
+PENDIENTE -> EN_EVALUACION -> APROBADA / RECHAZADA
 
-Ventaja para el proyecto:
-    Las reglas de negocio del flujo de aprobación quedan aisladas,
-    documentadas y testeables de forma independiente al resto del
-    sistema.
+Flujo para solicitudes mayores a Q10,000:
+PENDIENTE
+    -> EN_EVALUACION
+    -> PENDIENTE_SEGUNDA_APROBACION
+    -> APROBADA / RECHAZADA
 """
 
 from django.core.exceptions import ValidationError
 
 
 class TransicionInvalidaError(ValidationError):
-    """Se lanza cuando se intenta una transición de estado no permitida."""
+    """
+    Se lanza cuando se intenta realizar una transición
+    de estado que no está permitida.
+    """
+
     pass
 
 
 class EstadoSolicitud:
-    """Interfaz base del estado. Cada estado concreto sobreescribe
-    únicamente las transiciones que le son válidas."""
+    """
+    Clase base para los estados de una solicitud.
+    """
 
     nombre = None
 
-    def iniciar_evaluacion(self, solicitud):
+    def iniciar_evaluacion(
+        self,
+        solicitud,
+    ):
         raise TransicionInvalidaError(
-            f"No se puede iniciar evaluación desde el estado '{self.nombre}'."
+            f"No se puede iniciar evaluación "
+            f"desde el estado '{self.nombre}'."
         )
 
-    def aprobar(self, solicitud):
+    def aprobar(
+        self,
+        solicitud,
+    ):
         raise TransicionInvalidaError(
-            f"No se puede aprobar una solicitud en estado '{self.nombre}'."
+            f"No se puede aprobar una solicitud "
+            f"en estado '{self.nombre}'."
         )
 
-    def rechazar(self, solicitud, motivo=""):
+    def solicitar_segunda_aprobacion(
+        self,
+        solicitud,
+    ):
         raise TransicionInvalidaError(
-            f"No se puede rechazar una solicitud en estado '{self.nombre}'."
+            f"No se puede solicitar una segunda aprobación "
+            f"desde el estado '{self.nombre}'."
         )
 
-    def _cambiar_estado(self, solicitud, nuevo_estado, comentario=""):
+    def rechazar(
+        self,
+        solicitud,
+        motivo="",
+    ):
+        raise TransicionInvalidaError(
+            f"No se puede rechazar una solicitud "
+            f"en estado '{self.nombre}'."
+        )
+
+    def _obtener_nombre_estado(
+        self,
+        estado,
+    ):
+        nombres = {
+            "PENDIENTE": "Pendiente",
+            "EN_EVALUACION": "En evaluación",
+            "PENDIENTE_SEGUNDA_APROBACION": (
+                "Pendiente de segunda aprobación"
+            ),
+            "APROBADA": "Aprobada",
+            "RECHAZADA": "Rechazada",
+        }
+
+        return nombres.get(
+            estado,
+            estado,
+        )
+
+    def _crear_notificacion(
+        self,
+        solicitud,
+        estado_anterior,
+        nuevo_estado,
+        comentario="",
+    ):
+        """
+        Genera una notificación para el estudiante
+        propietario de la solicitud.
+        """
+
+        from .models import Notificacion
+
+        estado_anterior_texto = (
+            self._obtener_nombre_estado(
+                estado_anterior
+            )
+        )
+
+        estado_nuevo_texto = (
+            self._obtener_nombre_estado(
+                nuevo_estado
+            )
+        )
+
+        if nuevo_estado == "RECHAZADA":
+            mensaje = (
+                f"Tu solicitud #{solicitud.id} "
+                f"ha sido rechazada."
+            )
+
+            if comentario:
+                mensaje += (
+                    f" Motivo: {comentario}"
+                )
+
+        elif nuevo_estado == "APROBADA":
+            mensaje = (
+                f"Tu solicitud #{solicitud.id} "
+                f"ha sido aprobada."
+            )
+
+        elif (
+            nuevo_estado
+            == "PENDIENTE_SEGUNDA_APROBACION"
+        ):
+            mensaje = (
+                f"Tu solicitud #{solicitud.id} "
+                f"recibió la primera aprobación "
+                f"y está pendiente de una segunda aprobación."
+            )
+
+        elif nuevo_estado == "EN_EVALUACION":
+            mensaje = (
+                f"Tu solicitud #{solicitud.id} "
+                f"ha pasado a evaluación."
+            )
+
+        else:
+            mensaje = (
+                f"Tu solicitud #{solicitud.id} "
+                f"cambió de "
+                f"{estado_anterior_texto} a "
+                f"{estado_nuevo_texto}."
+            )
+
+        Notificacion.objects.create(
+            destinatario=solicitud.estudiante,
+            solicitud=solicitud,
+            mensaje=mensaje,
+        )
+
+    def _cambiar_estado(
+        self,
+        solicitud,
+        nuevo_estado,
+        comentario="",
+    ):
+        """
+        Cambia el estado de la solicitud.
+
+        También:
+        - Registra el cambio en el historial.
+        - Genera una notificación para el estudiante.
+        """
+
         from .models import HistorialEstado
+
         estado_anterior = solicitud.estado
+
         solicitud.estado = nuevo_estado
-        solicitud.save(update_fields=["estado", "fecha_actualizacion"])
+
+        solicitud.save(
+            update_fields=[
+                "estado",
+                "fecha_actualizacion",
+            ]
+        )
+
         HistorialEstado.objects.create(
             solicitud=solicitud,
             estado_anterior=estado_anterior,
@@ -68,47 +199,173 @@ class EstadoSolicitud:
             comentario=comentario,
         )
 
+        self._crear_notificacion(
+            solicitud=solicitud,
+            estado_anterior=estado_anterior,
+            nuevo_estado=nuevo_estado,
+            comentario=comentario,
+        )
+
 
 class PendienteState(EstadoSolicitud):
     nombre = "PENDIENTE"
 
-    def iniciar_evaluacion(self, solicitud):
-        self._cambiar_estado(solicitud, "EN_EVALUACION")
+    def iniciar_evaluacion(
+        self,
+        solicitud,
+    ):
+        self._cambiar_estado(
+            solicitud,
+            "EN_EVALUACION",
+        )
 
 
 class EnEvaluacionState(EstadoSolicitud):
     nombre = "EN_EVALUACION"
 
-    def aprobar(self, solicitud):
-        self._cambiar_estado(solicitud, "APROBADA")
+    def aprobar(
+        self,
+        solicitud,
+    ):
+        """
+        Aprobación directa para solicitudes
+        que no requieren segunda aprobación.
+        """
 
-    def rechazar(self, solicitud, motivo=""):
+        self._cambiar_estado(
+            solicitud,
+            "APROBADA",
+        )
+
+    def solicitar_segunda_aprobacion(
+        self,
+        solicitud,
+    ):
+        """
+        Primera aprobación de una solicitud
+        mayor a Q10,000.
+        """
+
+        self._cambiar_estado(
+            solicitud,
+            "PENDIENTE_SEGUNDA_APROBACION",
+            comentario=(
+                "Solicitud pendiente de segunda aprobación."
+            ),
+        )
+
+    def rechazar(
+        self,
+        solicitud,
+        motivo="",
+    ):
         solicitud.motivo_rechazo = motivo
-        solicitud.save(update_fields=["motivo_rechazo"])
-        self._cambiar_estado(solicitud, "RECHAZADA", comentario=motivo)
+
+        solicitud.save(
+            update_fields=[
+                "motivo_rechazo",
+            ]
+        )
+
+        self._cambiar_estado(
+            solicitud,
+            "RECHAZADA",
+            comentario=motivo,
+        )
+
+
+class PendienteSegundaAprobacionState(
+    EstadoSolicitud
+):
+    """
+    Estado utilizado cuando una solicitud
+    mayor a Q10,000 ya recibió su primera aprobación.
+    """
+
+    nombre = "PENDIENTE_SEGUNDA_APROBACION"
+
+    def aprobar(
+        self,
+        solicitud,
+    ):
+        """
+        La segunda aprobación finaliza el proceso.
+        """
+
+        self._cambiar_estado(
+            solicitud,
+            "APROBADA",
+            comentario=(
+                "Segunda aprobación realizada."
+            ),
+        )
+
+    def rechazar(
+        self,
+        solicitud,
+        motivo="",
+    ):
+        """
+        La segunda persona también puede rechazar
+        la solicitud.
+        """
+
+        solicitud.motivo_rechazo = motivo
+
+        solicitud.save(
+            update_fields=[
+                "motivo_rechazo",
+            ]
+        )
+
+        self._cambiar_estado(
+            solicitud,
+            "RECHAZADA",
+            comentario=motivo,
+        )
 
 
 class AprobadaState(EstadoSolicitud):
-    """Estado terminal: no admite más transiciones."""
+    """
+    Estado final.
+    """
+
     nombre = "APROBADA"
 
 
 class RechazadaState(EstadoSolicitud):
-    """Estado terminal: no admite más transiciones."""
+    """
+    Estado final.
+    """
+
     nombre = "RECHAZADA"
 
 
 _ESTADOS = {
     "PENDIENTE": PendienteState(),
     "EN_EVALUACION": EnEvaluacionState(),
+    "PENDIENTE_SEGUNDA_APROBACION": (
+        PendienteSegundaAprobacionState()
+    ),
     "APROBADA": AprobadaState(),
     "RECHAZADA": RechazadaState(),
 }
 
 
-def obtener_estado(nombre_estado: str) -> EstadoSolicitud:
-    """Factory sencillo que devuelve la instancia de estado correspondiente."""
+def obtener_estado(
+    nombre_estado: str,
+) -> EstadoSolicitud:
+    """
+    Devuelve el objeto correspondiente
+    al estado actual de la solicitud.
+    """
+
     try:
-        return _ESTADOS[nombre_estado]
+        return _ESTADOS[
+            nombre_estado
+        ]
+
     except KeyError:
-        raise ValueError(f"Estado desconocido: {nombre_estado}")
+        raise ValueError(
+            f"Estado desconocido: {nombre_estado}"
+        )

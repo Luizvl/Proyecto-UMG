@@ -1,0 +1,24 @@
+{% extends "admin/change_list.html" %}
+{% load static panel_admin %}
+{# Encabezado y tarjetas de resumen para todas las listas del panel — Byron. #}
+{# La tabla, los filtros, la búsqueda y las acciones siguen siendo las de Django. #}
+
+{% block content_title %}
+<h1>{{ cl.opts.verbose_name_plural|capfirst }}</h1>
+<p class="pn-subtitulo">Consulta, busca y administra {{ cl.opts.verbose_name_plural|lower }} de la plataforma.</p>
+{% endblock %}
+
+{% block content %}
+{% if not is_popup %}
+{% resumen_lista cl.opts as tarjetas %}
+<section class="pn-resumen">
+    {% for t in tarjetas %}
+    {% if t.url %}<a href="{{ t.url }}" class="pn-resumen-item pn-color-{{ t.color }}">{% else %}<div class="pn-resumen-item pn-color-{{ t.color }}">{% endif %}
+        <i></i>
+        <span><small>{{ t.titulo }}</small><strong>{{ t.valor }}</strong></span>
+    {% if t.url %}</a>{% else %}</div>{% endif %}
+    {% endfor %}
+</section>
+{% endif %}
+{{ block.super }}
+{% endblock %}

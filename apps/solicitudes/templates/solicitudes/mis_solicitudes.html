@@ -1,60 +1,334 @@
 {% extends 'base.html' %}
+{% load static solicitudes_ui %}
+{% block titulo %}Mis solicitudes | PNGIB{% endblock %}
 
 {% block contenido %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="font-weight-bold">Mis Solicitudes de Beca</h2>
-        <a href="{% url 'convocatorias:lista' %}" class="btn btn-outline-primary btn-sm">
-            + Ver convocatorias
-        </a>
-    </div>
+{% resumen_general solicitudes as general %}
+<div class="ms">
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                {{ message }}
+    <div class="ms-principal">
+        <!-- ===== Encabezado ===== -->
+        <section class="ms-hero">
+            <div>
+                <h1>Mis Solicitudes de Beca</h1>
+                <p>Consulta el estado de tus solicitudes, revisa avances y da seguimiento a cada convocatoria.</p>
+                <a href="{% url 'convocatorias:lista' %}" class="ms-boton-azul">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+                    Ver convocatorias &rarr;
+                </a>
             </div>
-        {% endfor %}
-    {% endif %}
+            <div class="ms-hero-visual" aria-hidden="true">
+                <span class="ms-burbuja b1"></span><span class="ms-burbuja b2"></span>
+                <img src="{% static 'img/login-hojas.webp' %}" alt="" class="mv mv-hojas">
+                <img src="{% static 'img/login-solicitud.webp' %}" alt="" class="mv mv-solicitud">
+                <img src="{% static 'img/login-birrete.webp' %}" alt="" class="mv mv-birrete">
+            </div>
+        </section>
 
-    <div class="row">
+        <!-- ===== Conteos ===== -->
+        <div class="ms-stats">
+            <button type="button" class="ms-stat activo" data-filtro="todas">
+                <span class="ms-stat-icono azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
+                <span class="ms-stat-txt"><small>Solicitudes activas</small><b>{{ general.conteo.total }}</b><em>Total de solicitudes</em></span>
+                <span class="ms-flecha">&rsaquo;</span>
+            </button>
+            <button type="button" class="ms-stat" data-filtro="evaluacion">
+                <span class="ms-stat-icono azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                <span class="ms-stat-txt"><small>En evaluación</small><b>{{ general.conteo.evaluacion }}</b><em>En proceso de revisión</em></span>
+                <span class="ms-flecha">&rsaquo;</span>
+            </button>
+            <button type="button" class="ms-stat" data-filtro="aprobada">
+                <span class="ms-stat-icono verde"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12 3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span class="ms-stat-txt"><small>Aprobadas</small><b class="verde">{{ general.conteo.aprobada }}</b><em>Finalizadas exitosamente</em></span>
+                <span class="ms-flecha">&rsaquo;</span>
+            </button>
+            <button type="button" class="ms-stat" data-filtro="pendiente">
+                <span class="ms-stat-icono ambar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/><circle cx="12" cy="17" r="1.3" fill="#fff"/></svg></span>
+                <span class="ms-stat-txt"><small>Pendientes</small><b class="ambar">{{ general.conteo.pendiente }}</b><em>Requiere tu atención</em></span>
+                <span class="ms-flecha">&rsaquo;</span>
+            </button>
+        </div>
+
+        <!-- ===== Lista de solicitudes ===== -->
+        <div class="ms-lista-head">
+            <h2>Mis solicitudes <span class="pe-chip">{{ general.conteo.total }} solicitud{{ general.conteo.total|pluralize:"es" }}</span></h2>
+            <label class="ms-orden">Ordenar por:
+                <select data-orden>
+                    <option value="reciente">Más recientes</option>
+                    <option value="antigua">Más antiguas</option>
+                    <option value="nombre">Nombre (A-Z)</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="ms-lista" data-lista>
         {% for solicitud in solicitudes %}
-            <div class="col-md-6 mb-4">
-                <div class="tarjeta p-4 shadow-sm border rounded bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h4 class="m-0 font-weight-bold h5">
-                            {{ solicitud.convocatoria.nombre }}
-                        </h4>
-                        <span class="badge badge-verde">
-                            {{ solicitud.estado|default:"ENVIADA" }}
-                        </span>
-                    </div>
-                    
-                    {% if solicitud.motivo %}
-                        <p class="text-secondary small my-3">
-                            <strong>Motivo presentado:</strong><br>
-                            {{ solicitud.motivo|truncatewords:20 }}
-                        </p>
-                    {% endif %}
+            {% resumen_solicitud solicitud as r %}
+            <article class="ms-card" data-estado="{{ r.clave }}" data-fecha="{{ solicitud.fecha_creacion|date:'U' }}" data-nombre="{{ solicitud.convocatoria.nombre|lower }}">
+                <div class="ms-card-fila">
+                    <span class="ms-tipo ms-tipo-{{ solicitud.convocatoria.tipo_beca|lower }}" aria-hidden="true">
+                        {% if solicitud.convocatoria.tipo_beca == "MEDIO" %}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+                        {% else %}
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 1 8.5 12 14l9-4.5V16h2V8.5z"/><path d="M5 11.8V16c0 1.8 3.1 3.5 7 3.5s7-1.7 7-3.5v-4.2L12 15.4z"/></svg>
+                        {% endif %}
+                    </span>
 
-                    <div class="pt-2 border-top d-flex justify-content-between align-items-center text-muted small">
-                        <span><strong>Código Solicitud:</strong> #{{ solicitud.id }}</span>
+                    <div class="ms-info">
+                        <h3>{{ solicitud.convocatoria.nombre }}</h3>
+                        <p>{{ solicitud.convocatoria.descripcion|default:solicitud.convocatoria.get_tipo_beca_display|truncatechars:70 }}</p>
+                        <div class="ms-meta">
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg> Código: #{{ solicitud.id }}</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg> Enviada: {{ solicitud.fecha_creacion|date:"j M Y" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="ms-progreso">
+                        <span class="ms-estado ms-estado-{{ r.clave }}">
+                            {% if r.clave == "aprobada" %}<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12 3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+                            {% elif r.clave == "pendiente" %}<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><rect x="11" y="6.5" width="2" height="7.5" rx="1" fill="#fff"/><circle cx="12" cy="17" r="1.3" fill="#fff"/></svg>
+                            {% elif r.clave == "rechazada" %}<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m8.5 8.5 7 7m0-7-7 7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+                            {% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{% endif %}
+                            {{ r.etiqueta }}
+                        </span>
+                        <!-- El Stepper Animado ya estructurado por Byron -->
+                        <ol class="ms-pasos ms-pasos-{{ r.clave }}">
+                            {% for p in r.pasos %}
+                            <li class="ms-paso-{{ p.situacion }}"><i></i><span>{{ p.nombre }}</span></li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+
+                    <div class="ms-acciones d-flex align-items-center gap-2">
+                        {% if r.docs_pendientes %}
+                            <span class="ms-boton-subir" title="La carga de documentos estará disponible pronto">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+                                Subir documentos
+                            </span>
+                        {% endif %}
+                        
+                        <!-- NUESTRO BOTÓN PDF (Solo aparece si está aprobada) -->
+                        {% if r.clave == "aprobada" %}
+                            <button type="button" class="boton-primario btn-sm rounded" style="background-color: #198754; border-color: #198754; font-weight: 600;" onclick="generarCartaPDF('{{ solicitud.id }}', '{{ solicitud.convocatoria.nombre|escapejs }}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Descargar Carta
+                            </button>
+                        {% endif %}
+
+                        <button type="button" class="ms-boton-detalle" data-detalle aria-expanded="false">Ver detalle <span>&rarr;</span></button>
                     </div>
                 </div>
-            </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="tarjeta text-center p-5 border rounded bg-light">
-                    <h4 class="text-muted mb-2">Aún no has postulado a ninguna beca</h4>
-                    <p class="text-secondary small mb-3">
-                        Explora las convocatorias activas y envía tu primera solicitud.
-                    </p>
-                    <a href="{% url 'convocatorias:lista' %}" class="btn btn-primary btn-sm">
-                        Ver Convocatorias
-                    </a>
+
+                <!-- Detalle desplegable -->
+                <div class="ms-detalle" hidden>
+                    <div>
+                        <h4>Documentos ({{ r.docs_ok }} de {{ r.docs_total }})</h4>
+                        <ul class="ms-docs">
+                            {% for d in r.documentos %}
+                                <li class="ok">{{ d.get_tipo_display }} <small>{{ d.fecha_carga|date:"j M Y" }}</small></li>
+                            {% empty %}
+                                <li class="falta">Aún no has subido documentos.</li>
+                            {% endfor %}
+                        </ul>   
+                    </div>
+                    <div>
+                        <h4>Historial</h4>
+                        <ul class="ms-historial">
+                            {% for h in r.historial %}
+                                <li><b>{{ h.estado_nuevo|nombre_estado }}</b> {{ h.comentario }} <small>{{ h.fecha|date:"j M Y, H:i" }}</small></li>
+                            {% empty %}
+                                <li>Solicitud enviada el {{ solicitud.fecha_creacion|date:"j M Y" }}. Aún sin cambios de estado.</li>
+                            {% endfor %}
+                        </ul>
+                        {% if solicitud.motivo_rechazo %}<p class="ms-motivo"><b>Motivo:</b> {{ solicitud.motivo_rechazo }}</p>{% endif %}
+                    </div>
                 </div>
+
+                <!-- NUESTRA PLANTILLA OCULTA PARA EL PDF -->
+                {% if r.clave == "aprobada" %}
+                <div id="plantilla-pdf-{{ solicitud.id }}" style="display: none;">
+                    <div style="padding: 50px; font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; background-color: #fff;">
+                        <div style="text-align: center; border-bottom: 2px solid #0d6efd; padding-bottom: 20px; margin-bottom: 30px;">
+                            <h2 style="color: #0d6efd; margin: 0; font-size: 24px;">Universidad Mariano Gálvez de Guatemala</h2>
+                            <h3 style="color: #555; margin: 5px 0 0; font-size: 18px;">Plataforma de Gestión de Becas</h3>
+                        </div>
+                        
+                        <div style="text-align: right; margin-bottom: 30px; font-size: 14px;">
+                            <strong>Fecha de Emisión:</strong> {% now "d \d\e F \d\e Y" %}<br>
+                            <strong>Resolución No.</strong> {{ solicitud.id }}-2026
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <p style="font-size: 16px;">Estimado/a estudiante:<br>
+                            <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
+                        </div>
+
+                        <div style="text-align: justify; margin-bottom: 40px;">
+                            <p>Por medio de la presente, nos complace informarle que, tras una exhaustiva revisión de su expediente académico y su carta de motivación, el Comité Evaluador ha decidido emitir una resolución <strong style="color: #198754;">FAVORABLE</strong> a su postulación.</p>
+                            
+                            <p>En consecuencia, se le otorga formalmente la adjudicación para la <strong>{{ solicitud.convocatoria.nombre }}</strong>.</p>
+                            
+                            <p>Le invitamos a continuar demostrando el alto nivel académico y compromiso que le han hecho acreedor/a de este beneficio. Por favor, manténgase atento/a al portal para los siguientes pasos administrativos.</p>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 80px;">
+                            <hr style="width: 250px; border: 1px solid #ccc; margin: 0 auto 10px;">
+                            <strong>Comité de Becas Universitarias</strong><br>
+                            <small style="color: #777;">Firma Electrónica Autorizada</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </article>
+        {% empty %}
+            <div class="ms-vacio">
+                <img src="{% static 'img/login-solicitud.webp' %}" alt="">
+                <h3>Aún no has postulado a ninguna beca</h3>
+                <p>Explora las convocatorias activas y envía tu primera solicitud.</p>
+                <a href="{% url 'convocatorias:lista' %}" class="boton-primario">Ver convocatorias &rarr;</a>
             </div>
         {% endfor %}
+            <p class="ms-sin-resultados" hidden>No hay solicitudes en este estado. <button type="button" data-filtro="todas">Ver todas</button></p>
+        </div>
     </div>
+
+    <!-- ===== Columna lateral ===== -->
+    <aside class="ms-lateral">
+        <section class="pe-card">
+            <header class="ms-lat-head">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M12 14h2M16 14h0"/></svg>
+                <h3>Próximas acciones</h3>
+            </header>
+            {% for a in general.acciones %}
+                <div class="ms-accion ms-accion-{{ a.tipo }}">
+                    <span class="ms-accion-icono">{% if a.tipo == "alerta" %}!{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>{% endif %}</span>
+                    <div><b>{{ a.titulo }}</b><small>{{ a.beca }}</small><p>{{ a.texto }}</p></div>
+                </div>
+            {% empty %}
+                <p class="ms-nada">No tienes acciones pendientes. ¡Todo al día!</p>
+            {% endfor %}
+        </section>
+
+        <section class="pe-card">
+            <header class="ms-lat-head">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0"/></svg>
+                <h3>Últimas actualizaciones</h3>
+            </header>
+            <ul class="ms-eventos">
+                {% for e in general.eventos %}
+                    <li class="ev-{{ e.clave }}">
+                        <div><b>{{ e.titulo }}</b><small>{{ e.beca }}</small></div>
+                        <time>{{ e.fecha|date:"j M Y" }}<br>{{ e.fecha|date:"H:i" }}</time>
+                    </li>
+                {% empty %}
+                    <li class="ms-nada">Sin actualizaciones por ahora.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="pe-card ms-ayuda">
+            <span class="ms-ayuda-icono">?</span>
+            <div>
+                <h3>¿Necesitas ayuda?</h3>
+                <p>Revisa cómo funciona el proceso de becas, paso a paso.</p>
+                <a href="{% url 'como_funciona' %}" class="boton-secundario">Ver cómo funciona</a>
+            </div>
+        </section>
+    </aside>
 </div>
+{% endblock %}
+
+{% block js_extra %}
+<!-- INYECCIÓN: SweetAlert2 y html2pdf.js -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+/* ---- Ver detalle: abre y cierra el panel de cada tarjeta ---- */
+document.querySelectorAll('[data-detalle]').forEach(function (b) {
+    b.addEventListener('click', function () {
+        var panel = b.closest('.ms-card').querySelector('.ms-detalle');
+        var abrir = panel.hidden;
+        panel.hidden = !abrir;
+        b.setAttribute('aria-expanded', abrir);
+        b.firstChild.textContent = abrir ? 'Ocultar detalle ' : 'Ver detalle ';
+    });
+});
+
+/* ---- Filtrar con las tarjetas de conteo ---- */
+var tarjetas = Array.from(document.querySelectorAll('.ms-card'));
+var sinResultados = document.querySelector('.ms-sin-resultados');
+function filtrar(estado) {
+    var visibles = 0;
+    tarjetas.forEach(function (t) {
+        var ver = estado === 'todas' || t.dataset.estado === estado;
+        t.hidden = !ver; if (ver) visibles++;
+    });
+    document.querySelectorAll('.ms-stat').forEach(function (s) {
+        s.classList.toggle('activo', s.dataset.filtro === estado);
+    });
+    if (sinResultados) sinResultados.hidden = visibles > 0 || !tarjetas.length;
+}
+document.querySelectorAll('[data-filtro]').forEach(function (b) {
+    b.addEventListener('click', function () { filtrar(b.dataset.filtro); });
+});
+
+/* ---- Ordenar la lista ---- */
+var lista = document.querySelector('[data-lista]');
+document.querySelector('[data-orden]').addEventListener('change', function (e) {
+    var modo = e.target.value;
+    tarjetas.sort(function (a, b) {
+        if (modo === 'nombre') return a.dataset.nombre.localeCompare(b.dataset.nombre);
+        var d = Number(b.dataset.fecha) - Number(a.dataset.fecha);
+        return modo === 'reciente' ? d : -d;
+    }).forEach(function (t) { lista.insertBefore(t, sinResultados); });
+});
+
+/* ---- NUESTRO SUPERPODER: GENERAR PDF EN VIVO ---- */
+function generarCartaPDF(solicitudId, nombreBeca) {
+    // 1. Obtenemos el contenedor oculto con nuestro HTML membretado
+    var elemento = document.getElementById('plantilla-pdf-' + solicitudId);
+    
+    // 2. Lo clonamos y lo volvemos "visible" pero fuera de la pantalla (truco de renderizado)
+    var clon = elemento.cloneNode(true);
+    clon.style.display = 'block';
+    clon.style.position = 'absolute';
+    clon.style.top = '-9999px';
+    document.body.appendChild(clon);
+
+    // 3. Opciones profesionales para el motor PDF
+    var opt = {
+        margin:       0.5,
+        filename:     'Carta_Adjudicacion_' + nombreBeca.replace(/\s+/g, '_') + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // 4. Mostrar cargador elegante al usuario
+    Swal.fire({
+        title: 'Firmando documento...',
+        text: 'Generando tu carta oficial de adjudicación',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // 5. ¡Ejecutar magia y descargar!
+    html2pdf().set(opt).from(clon).save().then(function() {
+        // Limpiamos el clon temporal
+        document.body.removeChild(clon);
+        
+        // Alerta de éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga Completa!',
+            text: 'Tu documento oficial ha sido generado.',
+            confirmButtonColor: '#0d6efd'
+        });
+    });
+}
+</script>
 {% endblock %}

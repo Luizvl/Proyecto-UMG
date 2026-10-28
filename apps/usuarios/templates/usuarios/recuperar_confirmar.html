@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva contraseña | PNGIB{% endblock %}
+
+{% block contenido %}
+<section class="auth-pagina">
+    {% include "usuarios/_auth_tarjeta_inicio.html" %}
+    {% if validlink %}
+        <h1>Crea tu nueva contraseña</h1>
+        <p class="auth-subtitulo">Debe tener al menos 8 caracteres y no puede ser solo números.</p>
+
+        <form method="post" class="login-form" novalidate>
+            {% csrf_token %}
+            {% for campo in form %}
+                <label for="{{ campo.id_for_label }}">{{ campo.label }}:</label>
+                <div class="campo {% if campo.errors %}campo-error{% endif %}">
+                    <svg class="campo-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                    <input type="password" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                           autocomplete="new-password" required>
+                    <button type="button" class="campo-ojo" aria-label="Mostrar contraseña">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+                {% for e in campo.errors %}<p class="campo-mensaje">{{ e }}</p>{% endfor %}
+            {% endfor %}
+            <button type="submit" class="boton-primario boton-login">Guardar contraseña &rarr;</button>
+        </form>
+    {% else %}
+        <h1>Enlace no válido</h1>
+        <p class="auth-subtitulo">
+            Este enlace ya se usó o expiró. Pide uno nuevo para recuperar tu contraseña.
+        </p>
+        <a href="{% url 'usuarios:recuperar' %}" class="boton-primario boton-login">Pedir un nuevo enlace</a>
+    {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block js_extra %}{% include "usuarios/_ojo_contrasena.html" %}{% endblock %}
