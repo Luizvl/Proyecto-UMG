@@ -2,10 +2,17 @@ from pathlib import Path
 
 from rest_framework import serializers
 
-from .models import Documento, HistorialEstado, Solicitud
+from .models import (
+    Documento,
+    HistorialEstado,
+    Notificacion,
+    Solicitud,
+)
 
 
-class DocumentoSerializer(serializers.ModelSerializer):
+class DocumentoSerializer(
+    serializers.ModelSerializer
+):
     class Meta:
         model = Documento
 
@@ -21,7 +28,10 @@ class DocumentoSerializer(serializers.ModelSerializer):
             "fecha_carga",
         ]
 
-    def validate_archivo(self, archivo):
+    def validate_archivo(
+        self,
+        archivo,
+    ):
         """
         Valida extensión y tamaño del archivo.
         """
@@ -43,23 +53,34 @@ class DocumentoSerializer(serializers.ModelSerializer):
                 "Utilice PDF, JPG, JPEG o PNG."
             )
 
-        maximo_bytes = 5 * 1024 * 1024
+        maximo_bytes = (
+            5 * 1024 * 1024
+        )
 
         if archivo.size > maximo_bytes:
             raise serializers.ValidationError(
-                "El archivo no puede superar los 5 MB."
+                "El archivo no puede superar "
+                "los 5 MB."
             )
 
         return archivo
 
-    def validate(self, data):
+    def validate(
+        self,
+        data,
+    ):
         """
         Evita duplicar documentos principales.
         El tipo OTRO sí puede repetirse.
         """
 
-        solicitud = data.get("solicitud")
-        tipo = data.get("tipo")
+        solicitud = data.get(
+            "solicitud"
+        )
+
+        tipo = data.get(
+            "tipo"
+        )
 
         if (
             solicitud
@@ -75,8 +96,8 @@ class DocumentoSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {
                         "tipo": (
-                            "Ya existe un documento de este "
-                            "tipo para la solicitud."
+                            "Ya existe un documento "
+                            "de este tipo para la solicitud."
                         )
                     }
                 )
@@ -97,6 +118,36 @@ class HistorialEstadoSerializer(
             "comentario",
         ]
 
+        read_only_fields = fields
+
+
+class NotificacionSerializer(
+    serializers.ModelSerializer
+):
+    """
+    Serializer para mostrar las notificaciones
+    del usuario.
+    """
+
+    class Meta:
+        model = Notificacion
+
+        fields = [
+            "id",
+            "solicitud",
+            "mensaje",
+            "leida",
+            "fecha",
+        ]
+
+        read_only_fields = [
+            "id",
+            "solicitud",
+            "mensaje",
+            "leida",
+            "fecha",
+        ]
+
 
 class SolicitudSerializer(
     serializers.ModelSerializer
@@ -115,20 +166,29 @@ class SolicitudSerializer(
         model = Solicitud
 
         fields = [
-    "id",
-    "estudiante",
-    "convocatoria",
-    "estado",
-    "motivo",
-    "motivo_rechazo",
-    "fecha_creacion",
-    "fecha_actualizacion",
-    "documentos",
-    "historial",
-                ]
+            "id",
+            "estudiante",
+            "convocatoria",
+            "estado",
+            "motivo",
+            "monto_solicitado",
+            "primer_aprobador",
+            "fecha_primera_aprobacion",
+            "segundo_aprobador",
+            "fecha_segunda_aprobacion",
+            "motivo_rechazo",
+            "fecha_creacion",
+            "fecha_actualizacion",
+            "documentos",
+            "historial",
+        ]
 
         read_only_fields = [
             "estado",
+            "primer_aprobador",
+            "fecha_primera_aprobacion",
+            "segundo_aprobador",
+            "fecha_segunda_aprobacion",
             "motivo_rechazo",
             "fecha_creacion",
             "fecha_actualizacion",
