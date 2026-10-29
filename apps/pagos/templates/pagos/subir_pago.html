@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block titulo %}Subir pago - PNGIB{% endblock %}
+
+{% block css_extra %}
+<style>
+    /* Diseño visual de Byron (Grid de 2 columnas) */
+    .pago-seccion { 
+        max-width: 1200px; 
+        margin: 4rem auto; 
+        padding: 0 1.5rem; 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 4rem; 
+        align-items: start;
+    }
+    
+    .pago-encabezado .etiqueta {
+        background-color: #e8f0fe;
+        color: #1a73e8;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .pago-encabezado h1 { font-size: 2.5rem; color: #0b132b; line-height: 1.2; margin-bottom: 1rem; }
+    .pago-encabezado p { color: #555; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
+
+    /* Tarjetas estilo flotante */
+    .tarjeta-moderna {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    /* Tabla de resumen de cobro (Estilo "Recibo") */
+    .resumen-moderno {
+        width: 100%;
+        background: #f9fbfc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #eef0f4;
+    }
+    .resumen-moderno table { width: 100%; border-collapse: collapse; }
+    .resumen-moderno th { text-align: left; color: #555; font-weight: normal; padding: 0.5rem 0; border-bottom: 1px dashed #e5e5e5; }
+    .resumen-moderno td { text-align: right; color: #0b132b; font-weight: 600; padding: 0.5rem 0; border-bottom: 1px dashed #e5e5e5; }
+    .resumen-moderno tr:last-child th, .resumen-moderno tr:last-child td { border-bottom: none; font-size: 1.2rem; color: #1a73e8; padding-top: 1rem; }
+
+    /* Formulario profesional */
+    .tarjeta-moderna form p { margin-bottom: 1.5rem; }
+    .tarjeta-moderna label { display: block; font-weight: 600; color: #0b132b; margin-bottom: 0.5rem; }
+    .tarjeta-moderna input[type="text"], .tarjeta-moderna input[type="number"],
+    .tarjeta-moderna input[type="file"], .tarjeta-moderna select {
+        width: 100%; padding: 0.8rem 1rem; border: 2px solid #eef0f4; border-radius: 10px; font-size: 1rem;
+        background-color: #f9fbfc; transition: border-color 0.3s;
+    }
+    .tarjeta-moderna input:focus { border-color: #1a73e8; outline: none; background-color: #fff; }
+    
+    .boton-pago {
+        background-color: #0b132b; color: white; width: 100%; padding: 1rem; border-radius: 10px;
+        font-size: 1.1rem; font-weight: 600; border: none; cursor: pointer; transition: 0.3s; margin-top: 1rem;
+    }
+    .boton-pago:hover { background-color: #1a73e8; transform: translateY(-2px); }
+
+    /* Imagen lateral */
+    .pago-imagen-wrapper img { width: 100%; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); object-fit: cover; }
+
+    /* Historial */
+    .historial-seccion { max-width: 1200px; margin: 0 auto 5rem auto; padding: 0 1.5rem; }
+    .historial-seccion h2 { color: #0b132b; margin-bottom: 1.5rem; font-size: 1.8rem; }
+    .tabla-moderna { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
+    .tabla-moderna th { background: #f8faff; color: #555; font-weight: 600; padding: 1rem 1.5rem; text-align: left; text-transform: uppercase; font-size: 0.85rem; }
+    .tabla-moderna td { padding: 1rem 1.5rem; border-bottom: 1px solid #f0f2f5; color: #333; }
+    
+    /* Etiquetas de estado (Badges) */
+    .badge-moderno { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
+    .badge-verde { background: #d4edda; color: #155724; }
+    .badge-rojo { background: #f8d7da; color: #721c24; }
+    .badge-amarillo { background: #fff3cd; color: #856404; }
+
+    @media (max-width: 900px) {
+        .pago-seccion { grid-template-columns: 1fr; gap: 2rem; }
+        .pago-imagen-wrapper { display: none; }
+        .tabla-moderna { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="pago-seccion">
+    <!-- Columna Izquierda: Lógica de pago -->
+    <div class="pago-columna-izq">
+        
+        {% if puede_pagar %}
+            <div class="pago-encabezado">
+                <span class="etiqueta">Paso Final</span>
+                <h1>Activa tu beca <br><span style="color: #1a73e8;">subiendo tu recibo</span></h1>
+                <p>Verifica el monto asignado según la cobertura de tu beca y adjunta el comprobante.</p>
+            </div>
+
+            <div class="tarjeta-moderna">
+                <!-- Resumen de cobro adaptado a tu lógica -->
+                <div class="resumen-moderno">
+                    <table>
+                        <tr><th>Beca asignada</th><td>{{ solicitud.convocatoria.nombre }}</td></tr>
+                        <tr><th>Cobertura aprobada</th><td>{{ condicion.descripcion_cobertura }} ({{ condicion.cobertura_porcentaje }}%)</td></tr>
+                        <tr><th>Inscripción base</th><td>Q{{ condicion.monto_base }}</td></tr>
+                        <tr><th>Total a transferir</th><td><strong>Q{{ condicion.monto_a_pagar }}</strong></td></tr>
+                    </table>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <!-- Tu input oculto original -->
+                    <input type="hidden" name="solicitud" value="{{ solicitud.pk }}">
+                    {{ form.as_p }}
+                    <button type="submit" class="boton-pago">Enviar comprobante &rarr;</button>
+                </form>
+            </div>
+        {% else %}
+            <!-- Mensaje cuando ya pagó -->
+            <div class="pago-encabezado">
+                <span class="etiqueta" style="background-color: #d4edda; color: #155724;">Pago Registrado</span>
+                <h1>Todo listo <br><span style="color: #155724;">por ahora</span></h1>
+            </div>
+            <div class="tarjeta-moderna" style="text-align: center; padding: 4rem 2rem;">
+                <svg style="width: 64px; height: 64px; color: #28a745; margin-bottom: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <h3 style="color: #0b132b; margin-bottom: 0.5rem;">Ya tienes un pago en proceso</h3>
+                <p style="color: #555;">No necesitas subir otro comprobante. Revisa el estado en la tabla inferior.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Columna Derecha: Imagen de Byron -->
+    <div class="pago-imagen-wrapper">
+        <img src="{% static 'img/estudiante-pago.png' %}" alt="Estudiante gestionando su beca">
+    </div>
+</div>
+
+<!-- Sección de Historial usando tu iteración exacta -->
+<div class="historial-seccion">
+    <h2>Mi historial de pagos</h2>
+    {% if historial_pagos %}
+        <table class="tabla-moderna">
+            <thead>
+                <tr>
+                    <th># Folio</th>
+                    <th>Beca</th>
+                    <th>Concepto</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Comprobante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in historial_pagos %}
+                <tr>
+                    <td><strong>{{ pago.pk }}</strong></td>
+                    <td>{{ pago.solicitud.convocatoria.nombre|default:"-" }}</td>
+                    <td>{{ pago.concepto }}</td>
+                    <td><strong>Q{{ pago.monto_pagado }}</strong></td>
+                    <td>{{ pago.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <span class="badge-moderno {% if pago.estado == 'aprobado' %}badge-verde{% elif pago.estado == 'rechazado' %}badge-rojo{% else %}badge-amarillo{% endif %}">
+                            {{ pago.get_estado_display }}
+                        </span>
+                        {% if pago.estado == 'rechazado' and pago.notas_admin %}
+                            <br><small style="color: #d93025; font-size: 0.8rem; margin-top: 4px; display: block;">{{ pago.notas_admin }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if pago.comprobante %}
+                            <a href="{{ pago.comprobante.url }}" target="_blank" style="color: #1a73e8; font-weight: 600; text-decoration: none;">Ver PDF/IMG</a>
+                        {% else %}-{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="tarjeta-moderna" style="text-align: center; padding: 2rem;">
+            <p style="color: #777; margin: 0;">Aún no has registrado ningún pago.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock contenido %}

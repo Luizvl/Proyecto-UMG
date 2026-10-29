@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Mi panel | PNGIB{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta tarjeta-ancha">
+    <h1>Bienvenido, {{ usuario.first_name|default:usuario.email }}</h1>
+    <p class="texto-secundario">Rol: <strong>{{ usuario.get_rol_display }}</strong></p>
+
+    {% if es_estudiante %}
+        <p>Aquí verás tus convocatorias disponibles y el estado de tus solicitudes (próximamente).</p>
+    {% elif es_comite %}
+        <p>Aquí verás las solicitudes pendientes de evaluación asignadas a tu comité (próximamente).</p>
+    {% elif es_administrador %}
+        <p>Aquí podrás administrar convocatorias y comités. Mientras tanto, puedes usar el <a href="/admin/">panel administrativo</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

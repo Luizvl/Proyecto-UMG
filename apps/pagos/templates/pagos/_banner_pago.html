@@ -1,0 +1,35 @@
+{% if request.resolver_match.url_name != 'subir_pago' %}
+    {% if debe_pagar %}
+    <section class="banner-pago banner-alerta">
+        <div>
+            <h3>¡Felicidades! Tu beca fue aprobada</h3>
+            <p>{{ condicion_por_pagar.descripcion_cobertura }} de <strong>{{ solicitud_por_pagar.convocatoria.nombre }}</strong>.
+               Para activarla, paga tu inscripción de <strong>Q{{ condicion_por_pagar.monto_a_pagar }}</strong>
+               (Q{{ condicion_por_pagar.monto_base }} menos {{ condicion_por_pagar.cobertura_porcentaje }}% de beca) y sube tu comprobante.</p>
+        </div>
+        <a href="{% url 'subir_pago' %}?solicitud={{ solicitud_por_pagar.pk }}" class="boton-primario boton-grande">Subir comprobante</a>
+    </section>
+    {% elif pago_en_revision %}
+    <section class="banner-pago banner-info">
+        <div>
+            <h3>Tu comprobante está en revisión</h3>
+            <p>Te avisaremos cuando el administrador lo apruebe.</p>
+        </div>
+        <a href="{% url 'subir_pago' %}" class="boton-secundario">Ver mis pagos</a>
+    </section>
+    {% elif pendiente_definicion %}
+    <section class="banner-pago banner-info">
+        <div>
+            <h3>Tu beca fue aprobada</h3>
+            <p>Estamos definiendo el monto de tu inscripción. Te avisaremos aquí en cuanto esté listo.</p>
+        </div>
+    </section>
+    {% elif beca_activa %}
+    <section class="banner-pago banner-exito">
+        <div>
+            <h3>Tu beca está activa</h3>
+            <p>Tu beca está vigente. ¡Mucho éxito en tus estudios!</p>
+        </div>
+    </section>
+    {% endif %}
+{% endif %}

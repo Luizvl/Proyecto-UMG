@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="pagina">
+    <h1>Mis Solicitudes de Beca</h1>
+    <p class="texto-secundario">Consulta el estado actual de tus postulaciones.</p>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 24px;">
+        {% for solicitud in solicitudes %}
+            <div class="paso" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <h3>{{ solicitud.convocatoria.titulo }}</h3>
+                    <p class="texto-secundario" style="margin: 4px 0 0 0;">Fecha de envío: {{ solicitud.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div>
+                    {% if solicitud.estado == 'BORRADOR' %}
+                        <span class="badge badge-gris">Borrador</span>
+                    {% elif solicitud.estado == 'ENVIADA' or solicitud.estado == 'EN_REVISION' %}
+                        <span class="badge badge-amarillo">En Revisión</span>
+                    {% elif solicitud.estado == 'APROBADA' %}
+                        <span class="badge badge-verde">Aprobada</span>
+                    {% elif solicitud.estado == 'RECHAZADA' %}
+                        <span class="badge badge-rojo">Rechazada</span>
+                    {% else %}
+                        <span class="badge badge-gris">{{ solicitud.get_estado_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="tarjeta" style="text-align: center;">
+                <p>Aún no has enviado ninguna solicitud.</p>
+                <a href="{% url 'convocatorias:lista' %}" class="boton-primario" style="margin-top: 12px;">Ver Convocatorias</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

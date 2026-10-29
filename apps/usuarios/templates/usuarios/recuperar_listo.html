@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}Contraseña actualizada | PNGIB{% endblock %}
+
+{% block contenido %}
+<section class="auth-pagina">
+    {% include "usuarios/_auth_tarjeta_inicio.html" %}
+        <h1>¡Listo!</h1>
+        <p class="auth-subtitulo">Tu contraseña se cambió correctamente. Ya puedes iniciar sesión con la nueva.</p>
+        <a href="{% url 'usuarios:login' %}" class="boton-primario boton-login">Iniciar sesión &rarr;</a>
+    </div>
+</section>
+{% endblock %}

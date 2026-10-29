@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Conócenos | PNGIB{% endblock %}
+
+{% block contenido %}
+<section class="inst-seccion" id="institucional" style="margin-top: 3rem;">
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <span class="etiqueta">Quiénes somos</span>
+        <h2>Un compromiso con la educación de Guatemala</h2>
+        <p class="texto-secundario inst-intro" style="max-width: 800px; margin: 1rem auto;">
+            La Plataforma Nacional para la Gestión Integral de Becas centraliza en un solo lugar
+            la postulación, la evaluación y el seguimiento de las becas del Ministerio de Educación.
+        </p>
+    </div>
+
+    <div class="inst-rejilla inst-dos">
+        <article class="inst-tarjeta">
+            <div class="inst-icono">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
+            </div>
+            <h3>Nuestra misión</h3>
+            <p>Facilitar el acceso a becas educativas mediante un proceso digital, transparente y
+               trazable, que permita a cada estudiante postularse, dar seguimiento a su solicitud
+               y conocer su resultado de forma clara y oportuna.</p>
+        </article>
+        <article class="inst-tarjeta">
+            <div class="inst-icono">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <h3>Nuestra visión</h3>
+            <p>Ser la plataforma de referencia para la gestión de becas del país, reconocida por la
+               equidad de sus procesos, la transparencia de sus decisiones y su aporte a que más
+               jóvenes continúen sus estudios.</p>
+        </article>
+    </div>
+</section>
+
+<section class="inst-seccion">
+    <span class="etiqueta">Nuestros valores</span>
+    <h2>Principios que guían cada proceso</h2>
+    <div class="inst-rejilla inst-cuatro">
+        <article class="inst-valor"><h3>Transparencia</h3><p>Cada solicitud conserva su historial de cambios.</p></article>
+        <article class="inst-valor"><h3>Equidad</h3><p>Las mismas reglas para todos los postulantes.</p></article>
+        <article class="inst-valor"><h3>Trazabilidad</h3><p>Sabes en qué etapa está tu solicitud.</p></article>
+        <article class="inst-valor"><h3>Accesibilidad</h3><p>Disponible desde computadora, tableta o celular.</p></article>
+    </div>
+</section>
+{% endblock %}
