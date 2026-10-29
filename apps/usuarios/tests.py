@@ -29,6 +29,7 @@ class UsuarioAutenticacionTests(TestCase):
             "nivel_academico": Usuario.NivelAcademico.UNIVERSITARIO,
             "password1": "NuevaClave2026!",
             "password2": "NuevaClave2026!",
+            "terminos": True,
         }
 
     def test_registro_estudiante_crea_usuario_correctamente(self):
@@ -42,11 +43,17 @@ class UsuarioAutenticacionTests(TestCase):
             self.datos_registro(),
         )
 
+        errores = (
+            response.context["form"].errors
+            if response.status_code == 200
+            else None
+        )
+
         self.assertEqual(
             response.status_code,
             302,
+            errores,
         )
-
         usuario = Usuario.objects.get(
             email="jonathan.prueba@test.com"
         )
