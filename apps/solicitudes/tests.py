@@ -1,7 +1,6 @@
 import tempfile
-from unittest.mock import patch
 from datetime import date, timedelta
-
+from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
@@ -1024,7 +1023,139 @@ class MotivoSolicitudTests(APITestCase):
             motivo,
         )
 
-        self.assertEqual(
-            response.data["motivo"],
-            motivo,
+        self.assertEqual(response.data["motivo"], motivo)
+
+class DobleAprobacionTests(APITestCase):
+    def setUp(self):
+        self.estudiante = Usuario.objects.create_user(
+            username="estudiante_doble",
+            email="estudiante_doble@test.com",
+            password="Prueba12345",
+            dpi="1234567890701",
+            rol=Usuario.Rol.ESTUDIANTE,
+            nivel_academico=Usuario.NivelAcademico.UNIVERSITARIO,
         )
+
+        self.aprobador1 = Usuario.objects.create_user(
+            username="aprobador1",
+            email="aprobador1@test.com",
+            password="Prueba12345",
+            rol=Usuario.Rol.COMITE,
+        )
+
+        self.aprobador2 = Usuario.objects.create_user(
+            username="aprobador2",
+            email="aprobador2@test.com",
+            password="Prueba12345",
+            rol=Usuario.Rol.COMITE,
+        )
+
+        self.convocatoria = Convocatoria.objects.create(
+            nombre="Convocatoria doble aprobación",
+            tipo_beca=Convocatoria.TIPO_UNIVERSITARIO,
+            descripcion="Prueba de doble aprobación",
+            fecha_inicio=date.today(),
+            fecha_fin=date.today() + timedelta(days=30),
+            cupo=10,
+            estado=Convocatoria.ESTADO_ACTIVA,
+        )
+
+        self.comite = Comite.objects.create(
+            nombre="Comité doble aprobación",
+            convocatoria=self.convocatoria,
+        )
+
+        self.comite.integrantes.add(self.aprobador1, self.aprobador2)
+
+    def iniciar_evaluacion(self, solicitud):
+        self.client.force_authenticate(user=self.aprobador1)
+        response = self.client.post(
+            reverse("solicitud-iniciar-evaluacion", args=[solicitud.id])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_monto_menor_10000_requiere_una_aprobacion(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="8000.00",
+        )
+        self.iniciar_evaluacion(solicitud)
+        
+        response = self.client.post(reverse("solicitud-aprobar", args=[solicitud.id]))
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        solicitud.refresh_from_db()
+        self.assertEqual(solicitud.estado, Solicitud.APROBADA)
+        self.assertEqual(solicitud.primer_aprobador, self.aprobador1)
+        self.assertIsNotNone(solicitud.fecha_primera_aprobacion)
+        self.assertIsNone(solicitud.segundo_aprobador)
+        self.assertIsNone(solicitud.fecha_segunda_aprobacion)
+
+    def test_monto_exacto_10000_requiere_una_aprobacion(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="10000.00",
+        )
+        self.iniciar_evaluacion(solicitud)
+        
+        response = self.client.post(reverse("solicitud-aprobar", args=[solicitud.id]))
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        solicitud.refresh_from_db()
+        self.assertEqual(solicitud.estado, Solicitud.APROBADA)
+        self.assertEqual(solicitud.primer_aprobador, self.aprobador1)
+        self.assertIsNotNone(solicitud.fecha_primera_aprobacion)
+        self.assertIsNone(solicitud.segundo_aprobador)
+
+    def test_monto_mayor_10000_requiere_dos_aprobaciones(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="15000.00",
+        )
+        self.iniciar_evaluacion(solicitud)
+        
+        primera = self.client.post(reverse("solicitud-aprobar", args=[solicitud.id]))
+        self.assertEqual(primera.status_code, status.HTTP_200_OK)
+        
+        solicitud.refresh_from_db()
+        self.assertEqual(solicitud.estado, Solicitud.PENDIENTE_SEGUNDA_APROBACION)
+        self.assertEqual(solicitud.primer_aprobador, self.aprobador1)
+        self.assertIsNotNone(solicitud.fecha_primera_aprobacion)
+        self.assertIsNone(solicitud.segundo_aprobador)
+
+        self.client.force_authenticate(user=self.aprobador2)
+        segunda = self.client.post(reverse("solicitud-aprobar", args=[solicitud.id]))
+        self.assertEqual(segunda.status_code, status.HTTP_200_OK)
+        
+        solicitud.refresh_from_db()
+        self.assertEqual(solicitud.estado, Solicitud.APROBADA)
+        self.assertEqual(solicitud.primer_aprobador, self.aprobador1)
+        self.assertEqual(solicitud.segundo_aprobador, self.aprobador2)
+        self.assertIsNotNone(solicitud.fecha_primera_aprobacion)
+        self.assertIsNotNone(solicitud.fecha_segunda_aprobacion)
+
+    def test_misma_persona_no_puede_aprobar_dos_veces(self):
+        solicitud = Solicitud.objects.create(
+            estudiante=self.estudiante,
+            convocatoria=self.convocatoria,
+            monto_solicitado="15000.00",
+        )
+        self.iniciar_evaluacion(solicitud)
+        
+        primera = self.client.post(reverse("solicitud-aprobar", args=[solicitud.id]))
+        self.assertEqual(primera.status_code, status.HTTP_200_OK)
+        
+        solicitud.refresh_from_db()
+        self.assertEqual(solicitud.estado, Solicitud.PENDIENTE_SEGUNDA_APROBACION)
+        
+        segunda = self.client.post(reverse("solicitud-aprobar", args=[solicitud.id]))
+        self.assertEqual(segunda.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        solicitud.refresh_from_db()
+        self.assertEqual(solicitud.estado, Solicitud.PENDIENTE_SEGUNDA_APROBACION)
+        self.assertEqual(solicitud.primer_aprobador, self.aprobador1)
+        self.assertIsNone(solicitud.segundo_aprobador)
+        self.assertIsNone(solicitud.fecha_segunda_aprobacion)

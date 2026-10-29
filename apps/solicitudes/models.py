@@ -15,12 +15,14 @@ class Solicitud(models.Model):
 
     PENDIENTE = "PENDIENTE"
     EN_EVALUACION = "EN_EVALUACION"
+    PENDIENTE_SEGUNDA_APROBACION = "PENDIENTE_SEGUNDA_APROBACION"
     APROBADA = "APROBADA"
     RECHAZADA = "RECHAZADA"
 
     ESTADOS = [
         (PENDIENTE, "Pendiente"),
         (EN_EVALUACION, "En Evaluación"),
+        (PENDIENTE_SEGUNDA_APROBACION, "Pendiente de segunda aprobación"),
         (APROBADA, "Aprobada"),
         (RECHAZADA, "Rechazada"),
     ]
@@ -28,24 +30,34 @@ class Solicitud(models.Model):
     estudiante = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="solicitudes"
     )
-    convocatoria = models.ForeignKey(Convocatoria, on_delete=models.CASCADE, related_name="solicitudes")
+    
+    convocatoria = models.ForeignKey(
+        Convocatoria, on_delete=models.CASCADE, related_name="solicitudes"
+    )
+    
     estado = models.CharField(
-        max_length=20,
+        max_length=35,
         choices=ESTADOS,
         default=PENDIENTE,
     )
 
-    # Motivo escrito por el estudiante al solicitar la beca.
-    motivo = models.TextField(
-        max_length=1000,
-        default="",
+    # --- Campos de Jonathan (Doble aprobación) ---
+    monto_solicitado = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    primer_aprobador = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="solicitudes_primera_aprobacion"
     )
-
-    motivo_rechazo = models.TextField(
-        blank=True
+    fecha_primera_aprobacion = models.DateTimeField(null=True, blank=True)
+    segundo_aprobador = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="solicitudes_segunda_aprobacion"
     )
+    fecha_segunda_aprobacion = models.DateTimeField(null=True, blank=True)
 
-    # Porcentaje de beca otorgado al aprobar la solicitud.
+    motivo = models.TextField(max_length=1000, default="")
+    motivo_rechazo = models.TextField(blank=True)
+
+    # --- Campos de Álvaro (Auditoría y Porcentaje) ---
     porcentaje_aprobado = models.IntegerField(
         "Porcentaje de Beca",
         default=0,
@@ -65,8 +77,6 @@ class Solicitud(models.Model):
         return f"Solicitud #{self.pk} - {self.estudiante} - {self.get_estado_display()}"
 
     # --- Delegación al patrón State ---
-    # El modelo no decide si una transición es válida; delega esa
-    # responsabilidad al objeto de estado correspondiente.
     def _get_state(self):
         from .states import obtener_estado
         return obtener_estado(self.estado)
@@ -77,15 +87,20 @@ class Solicitud(models.Model):
     def aprobar(self):
         self._get_state().aprobar(self)
 
+    def solicitar_segunda_aprobacion(self):
+        self._get_state().solicitar_segunda_aprobacion(self)
+
     def rechazar(self, motivo: str = ""):
         self._get_state().rechazar(self, motivo)
 
 
 class HistorialEstado(models.Model):
-    """Bitácora de cambios de estado, usada para trazabilidad (HU-14)."""
-    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name="historial")
-    estado_anterior = models.CharField(max_length=20)
-    estado_nuevo = models.CharField(max_length=20)
+    """Bitácora de cambios de estado de una solicitud."""
+    solicitud = models.ForeignKey(
+        Solicitud, on_delete=models.CASCADE, related_name="historial"
+    )
+    estado_anterior = models.CharField(max_length=35)
+    estado_nuevo = models.CharField(max_length=35)
     fecha = models.DateTimeField(auto_now_add=True)
     comentario = models.CharField(max_length=255, blank=True)
 
@@ -96,17 +111,41 @@ class HistorialEstado(models.Model):
         return f"{self.solicitud_id}: {self.estado_anterior} -> {self.estado_nuevo}"
 
 
+class Notificacion(models.Model):
+    """
+    Notificación generada automáticamente cuando
+    cambia el estado de una solicitud. (Implementación Jonathan)
+    """
+    destinatario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notificaciones"
+    )
+    solicitud = models.ForeignKey(
+        Solicitud, on_delete=models.CASCADE, related_name="notificaciones"
+    )
+    mensaje = models.CharField(max_length=255)
+    leida = models.BooleanField(default=False)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Notificación"
+        verbose_name_plural = "Notificaciones"
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Notificación para {self.destinatario} - Solicitud #{self.solicitud_id}"
+
+
 def ruta_documento(instance, filename):
     return f"solicitudes/{instance.solicitud_id}/{filename}"
 
 
 class Documento(models.Model):
-    """Documento de respaldo cargado a una solicitud (HU-08)."""
-
+    """Documento de respaldo cargado a una solicitud."""
     TIPO_DPI = "DPI"
     TIPO_CONSTANCIA = "CONSTANCIA_ESTUDIOS"
     TIPO_NOTAS = "NOTAS"
     TIPO_OTRO = "OTRO"
+
     TIPOS = [
         (TIPO_DPI, "DPI / Documento de identificación"),
         (TIPO_CONSTANCIA, "Constancia de estudios"),
@@ -114,7 +153,9 @@ class Documento(models.Model):
         (TIPO_OTRO, "Otro"),
     ]
 
-    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name="documentos")
+    solicitud = models.ForeignKey(
+        Solicitud, on_delete=models.CASCADE, related_name="documentos"
+    )
     tipo = models.CharField(max_length=25, choices=TIPOS, default=TIPO_OTRO)
     archivo = models.FileField(upload_to=ruta_documento)
     fecha_carga = models.DateTimeField(auto_now_add=True)
@@ -128,25 +169,24 @@ class Documento(models.Model):
 
 
 class AuditoriaSolicitud(models.Model):
-    # 1. ¿A qué solicitud se le hizo el cambio?
-    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name='historial_auditoria')
-    
-    # 2. ¿Quién realizó la acción? (El administrador en sesión)
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    # 3. ¿Qué operación se ejecutó? (Ej: "Aprobación", "Asignación de Pago", "Rechazo")
+    """
+    Registro de Auditoría (Implementación Álvaro)
+    Control de acciones específicas realizadas por administradores.
+    """
+    solicitud = models.ForeignKey(
+        Solicitud, on_delete=models.CASCADE, related_name='historial_auditoria'
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
     accion = models.CharField(max_length=100)
-    
-    # 4. ¿Cuál fue el resultado? (Ej: "Estado cambiado a Aprobada. Cobertura: 50%")
     resultado = models.TextField()
-    
-    # 5. ¿Cuándo ocurrió? (Se llena automáticamente con la hora del sistema)
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Registro de Auditoría'
         verbose_name_plural = 'Bitácora de Auditorías'
-        ordering = ['-fecha'] # Ordena de la más reciente a la más antigua
+        ordering = ['-fecha'] 
 
     def __str__(self):
         return f"[{self.fecha.strftime('%d/%m/%Y %H:%M')}] {self.accion} por {self.usuario}"

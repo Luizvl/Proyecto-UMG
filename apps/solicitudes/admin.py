@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.utils.html import format_html
 
@@ -73,6 +72,7 @@ class SolicitudAdmin(admin.ModelAdmin):
         colores = {
             "PENDIENTE": "warning",
             "EN_EVALUACION": "primary",
+            "PENDIENTE_SEGUNDA_APROBACION": "info",
             "APROBADA": "success",
             "RECHAZADA": "danger",
         }
@@ -163,7 +163,7 @@ class SolicitudAdmin(admin.ModelAdmin):
 
 
 # ==========================================================
-# ADMINISTRACIÓN DE LA BITÁCORA DE AUDITORÍA
+# ADMINISTRACIÓN DE LA BITÁCORA DE AUDITORÍA (Tu módulo intacto)
 # ==========================================================
 
 @admin.register(AuditoriaSolicitud)

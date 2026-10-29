@@ -2,13 +2,17 @@ from pathlib import Path
 
 from rest_framework import serializers
 
-from .models import Documento, HistorialEstado, Solicitud
+from .models import (
+    Documento,
+    HistorialEstado,
+    Notificacion,
+    Solicitud,
+)
 
 
 class DocumentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Documento
-
         fields = [
             "id",
             "solicitud",
@@ -16,35 +20,21 @@ class DocumentoSerializer(serializers.ModelSerializer):
             "archivo",
             "fecha_carga",
         ]
-
         read_only_fields = [
             "fecha_carga",
         ]
 
     def validate_archivo(self, archivo):
-        """
-        Valida extensión y tamaño del archivo.
-        """
-
-        extensiones_permitidas = {
-            ".pdf",
-            ".jpg",
-            ".jpeg",
-            ".png",
-        }
-
-        extension = Path(
-            archivo.name
-        ).suffix.lower()
+        """Valida extensión y tamaño del archivo."""
+        extensiones_permitidas = {".pdf", ".jpg", ".jpeg", ".png"}
+        extension = Path(archivo.name).suffix.lower()
 
         if extension not in extensiones_permitidas:
             raise serializers.ValidationError(
-                "Formato no permitido. "
-                "Utilice PDF, JPG, JPEG o PNG."
+                "Formato no permitido. Utilice PDF, JPG, JPEG o PNG."
             )
 
         maximo_bytes = 5 * 1024 * 1024
-
         if archivo.size > maximo_bytes:
             raise serializers.ValidationError(
                 "El archivo no puede superar los 5 MB."
@@ -57,15 +47,10 @@ class DocumentoSerializer(serializers.ModelSerializer):
         Evita duplicar documentos principales.
         El tipo OTRO sí puede repetirse.
         """
-
         solicitud = data.get("solicitud")
         tipo = data.get("tipo")
 
-        if (
-            solicitud
-            and tipo
-            and tipo != Documento.TIPO_OTRO
-        ):
+        if solicitud and tipo and tipo != Documento.TIPO_OTRO:
             existe = Documento.objects.filter(
                 solicitud=solicitud,
                 tipo=tipo,
@@ -73,72 +58,73 @@ class DocumentoSerializer(serializers.ModelSerializer):
 
             if existe:
                 raise serializers.ValidationError(
-                    {
-                        "tipo": (
-                            "Ya existe un documento de este "
-                            "tipo para la solicitud."
-                        )
-                    }
+                    {"tipo": "Ya existe un documento de este tipo para la solicitud."}
                 )
 
         return data
 
 
-class HistorialEstadoSerializer(
-    serializers.ModelSerializer
-):
+class HistorialEstadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistorialEstado
-
         fields = [
             "estado_anterior",
             "estado_nuevo",
             "fecha",
             "comentario",
         ]
+        read_only_fields = fields
 
 
-class SolicitudSerializer(
-    serializers.ModelSerializer
-):
-    documentos = DocumentoSerializer(
-        many=True,
-        read_only=True,
-    )
+class NotificacionSerializer(serializers.ModelSerializer):
+    """Serializer para mostrar las notificaciones del usuario."""
+    class Meta:
+        model = Notificacion
+        fields = [
+            "id",
+            "solicitud",
+            "mensaje",
+            "leida",
+            "fecha",
+        ]
+        read_only_fields = fields
 
-    historial = HistorialEstadoSerializer(
-        many=True,
-        read_only=True,
-    )
+
+class SolicitudSerializer(serializers.ModelSerializer):
+    documentos = DocumentoSerializer(many=True, read_only=True)
+    historial = HistorialEstadoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Solicitud
-
         fields = [
-    "id",
-    "estudiante",
-    "convocatoria",
-    "estado",
-    "motivo",
-    "motivo_rechazo",
-    "fecha_creacion",
-    "fecha_actualizacion",
-    "documentos",
-    "historial",
-                ]
+            "id",
+            "estudiante",
+            "convocatoria",
+            "estado",
+            "motivo",
+            "monto_solicitado",
+            "primer_aprobador",
+            "fecha_primera_aprobacion",
+            "segundo_aprobador",
+            "fecha_segunda_aprobacion",
+            "motivo_rechazo",
+            "fecha_creacion",
+            "fecha_actualizacion",
+            "documentos",
+            "historial",
+        ]
 
         read_only_fields = [
             "estado",
+            "primer_aprobador",
+            "fecha_primera_aprobacion",
+            "segundo_aprobador",
+            "fecha_segunda_aprobacion",
             "motivo_rechazo",
             "fecha_creacion",
             "fecha_actualizacion",
         ]
 
 
-class RechazarSolicitudSerializer(
-    serializers.Serializer
-):
-    motivo = serializers.CharField(
-        required=True,
-        allow_blank=False,
-    )
+class RechazarSolicitudSerializer(serializers.Serializer):
+    motivo = serializers.CharField(required=True, allow_blank=False)

@@ -2018,9 +2018,7 @@ body:has(.ap) { background: #f7f9fe url("../img/login-fondo-olas.webp") center t
     .ap-botones { flex-direction: column-reverse; gap: 12px; align-items: stretch; }
     .ap-enviar { justify-content: center; padding: 16px !important; }
     .ap-cancelar { text-align: center; }
-}
-
-/* ---------- Banner de pagos (página de inicio) ---------- */
+}/* ---------- Banner de pagos (página de inicio) ---------- */
 .banner-pago {
     display: flex;
     align-items: center;

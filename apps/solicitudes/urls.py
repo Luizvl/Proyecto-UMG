@@ -1,6 +1,7 @@
 from rest_framework.routers import DefaultRouter
 
 from .views import DocumentoViewSet, SolicitudViewSet
+from .views_notificaciones import NotificacionViewSet
 
 
 router = DefaultRouter()
@@ -17,5 +18,10 @@ router.register(
     basename="documento",
 )
 
+router.register(
+    r"notificaciones",
+    NotificacionViewSet,
+    basename="notificacion",
+)
 
 urlpatterns = router.urls

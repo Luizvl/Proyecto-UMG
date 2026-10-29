@@ -3,6 +3,8 @@
 {% block titulo %}Inicio | PNGIB{% endblock %}
 
 {% block contenido %}
+
+<!-- ===== HERO: dos columnas (texto a la izquierda, imagen a la derecha) ===== -->
 <section class="hero-inicio">
     <div class="hero-texto">
         <span class="etiqueta">Tu futuro empieza aquí</span>
@@ -11,6 +13,7 @@
             Aplica a convocatorias, sube tus documentos y sigue el estado de tu
             solicitud de forma fácil, segura y sin filas.
         </p>
+
         <div class="hero-acciones">
             {% if user.is_authenticated %}
                 <a href="{% url 'usuarios:panel' %}" class="boton-primario boton-grande">Ir a mi panel &rarr;</a>
@@ -20,7 +23,7 @@
             {% endif %}
         </div>
 
-        <!-- Tarjetas de beneficios -->
+        <!-- Tarjetas de beneficios (Combinadas: tus iconos + la tarjeta extra de Jonathan) -->
         <div class="beneficios">
             <article class="beneficio">
                 <div class="beneficio-icono icono-azul">
@@ -31,6 +34,7 @@
                     <p>Realiza todo en línea, sin filas ni papeleo.</p>
                 </div>
             </article>
+
             <article class="beneficio">
                 <div class="beneficio-icono icono-verde">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20v-6M12 20V8M18 20V4"/></svg>
@@ -40,24 +44,39 @@
                     <p>Conoce el estado de tu solicitud desde tu panel.</p>
                 </div>
             </article>
+
+            <article class="beneficio">
+                <div class="beneficio-icono icono-ambar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                </div>
+                <div>
+                    <h3>Convocatorias activas</h3>
+                    <p>Encuentra las becas disponibles para tu nivel académico.</p>
+                </div>
+            </article>
         </div>
     </div>
+
     <div class="hero-imagen">
         <img src="{% static 'img/hero-estudiante.png' %}" alt="Estudiante sonriendo con sus cuadernos">
     </div>
 </section>
 
+<!-- ===== PASO A PASO (Textos mejorados de Jonathan) ===== -->
 <section class="paso-a-paso">
     <span class="etiqueta">Paso a paso</span>
     <h2>¿Cómo funciona el proceso de becas?</h2>
+    <p class="texto-secundario">Cuatro pasos, desde que te registras hasta que conoces el resultado de tu solicitud.</p>
+
     <div class="pasos">
-        <div class="paso"><div class="numero">1</div><h3>Crea tu cuenta</h3><p class="texto-secundario">Regístrate con tu DPI y correo.</p></div>
-        <div class="paso"><div class="numero">2</div><h3>Elige una convocatoria</h3><p class="texto-secundario">Consulta las becas activas y aplica.</p></div>
-        <div class="paso"><div class="numero">3</div><h3>Sube tus documentos</h3><p class="texto-secundario">Adjunta tus requisitos en PDF.</p></div>
-        <div class="paso"><div class="numero">4</div><h3>Sigue tu resultado</h3><p class="texto-secundario">El comité evalúa tu solicitud.</p></div>
+        <div class="paso"><div class="numero">1</div><h3>Crea tu cuenta</h3><p class="texto-secundario">Regístrate con tu DPI y correo. Solo lo haces una vez.</p></div>
+        <div class="paso"><div class="numero">2</div><h3>Elige una convocatoria</h3><p class="texto-secundario">Consulta las becas activas para tu nivel académico y aplica.</p></div>
+        <div class="paso"><div class="numero">3</div><h3>Sube tus documentos</h3><p class="texto-secundario">Adjunta tu DPI, constancia de estudios e historial de notas.</p></div>
+        <div class="paso"><div class="numero">4</div><h3>Sigue tu resultado</h3><p class="texto-secundario">Un comité evalúa tu solicitud y ves el estado actualizado.</p></div>
     </div>
 </section>
 
+<!-- ===== PROGRAMAS (Tu sección de niveles académicos intacta) ===== -->
 <section class="inst-seccion">
     <span class="etiqueta">Programas</span>
     <h2>Becas por nivel académico</h2>
@@ -67,4 +86,5 @@
         <article class="inst-tarjeta"><h3>Posgrado</h3><p>Apoyo para maestrías y especializaciones.</p></article>
     </div>
 </section>
+
 {% endblock %}

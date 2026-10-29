@@ -15,5 +15,6 @@ def inicio(request):
 def como_funciona(request):
     return render(request, "paginas/como_funciona.html")
 
+
 def conocenos(request):
-    return render(request, 'paginas/conocenos.html')
+    return render(request, "paginas/conocenos.html")
