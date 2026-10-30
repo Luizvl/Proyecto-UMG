@@ -2092,3 +2092,7 @@ body:has(.ap) { background: #f7f9fe url("../img/login-fondo-olas.webp") center t
 .resumen-pago { margin: 16px 0 24px 0; border-collapse: collapse; }
 .resumen-pago th { text-align: left; padding: 8px 24px 8px 0; color: var(--color-text-secondary, #6e6e73); font-weight: 600; }
 .resumen-pago td { padding: 8px 0; }
+
+/* Banner de beca aprobada en azul */
+.banner-alerta { background: #e8f0fe; color: #1e3a8a; border: 1px solid #c7d7fb; }
+.banner-alerta h3, .banner-alerta p { color: #1e3a8a; }

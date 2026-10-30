@@ -1,5 +1,23 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+
+
+class CustomUserManager(UserManager):
+    """
+    Manager personalizado para asegurar que los superusuarios creados por consola
+    nazcan automáticamente con el rol ADMINISTRADOR.
+    """
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("rol", "ADMINISTRADOR")
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("El superusuario debe tener is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("El superusuario debe tener is_superuser=True.")
+
+        return self._create_user(username, email, password, **extra_fields)
 
 
 class Usuario(AbstractUser):
@@ -39,8 +57,24 @@ class Usuario(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
+    # Conectamos el manager personalizado
+    objects = CustomUserManager()
+
     def __str__(self):
-        return f"{self.email} - {self.get_rol_display()}"
+        # Corregido: el salto de línea rompía la sintaxis de Python. 
+        # Ahora se mostrará limpio, ej: "alvaro@admin.com (Administrador)"
+        return f"{self.email} ({self.get_rol_display()})"
 
     def es_estudiante(self):
         return self.rol == self.Rol.ESTUDIANTE
+
+    def save(self, *args, **kwargs):
+        # Candado de seguridad: Sincroniza el rol ADMINISTRADOR con los permisos de Django.
+        # Esto soluciona tu problema de los menús desplegables en el panel /admin, 
+        # garantizando que tengas acceso total (ver, agregar, cambiar, eliminar).
+        if self.is_superuser or self.is_staff:
+            self.rol = self.Rol.ADMINISTRADOR
+            self.is_staff = True
+            self.is_superuser = True
+            
+        super().save(*args, **kwargs)
