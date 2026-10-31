@@ -1,32 +1,37 @@
+{# Aviso del módulo de Pagos — diseño de Byron. Usa las mismas variables del context processor estado_pagos. #}
 {% if request.resolver_match.url_name != 'subir_pago' %}
     {% if debe_pagar %}
-    <section class="banner-pago banner-alerta">
-        <div>
+    <section class="bp bp-azul">
+        <span class="bp-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span>
+        <div class="bp-texto">
             <h3>¡Felicidades! Tu beca fue aprobada</h3>
             <p>{{ condicion_por_pagar.descripcion_cobertura }} de <strong>{{ solicitud_por_pagar.convocatoria.nombre }}</strong>.
                Para activarla, paga tu inscripción de <strong>Q{{ condicion_por_pagar.monto_a_pagar }}</strong>
                (Q{{ condicion_por_pagar.monto_base }} menos {{ condicion_por_pagar.cobertura_porcentaje }}% de beca) y sube tu comprobante.</p>
         </div>
-        <a href="{% url 'subir_pago' %}?solicitud={{ solicitud_por_pagar.pk }}" class="boton-primario boton-grande">Subir comprobante</a>
+        <a href="{% url 'subir_pago' %}?solicitud={{ solicitud_por_pagar.pk }}" class="boton-primario bp-boton">Subir comprobante &rarr;</a>
     </section>
     {% elif pago_en_revision %}
-    <section class="banner-pago banner-info">
-        <div>
+    <section class="bp bp-ambar">
+        <span class="bp-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div class="bp-texto">
             <h3>Tu comprobante está en revisión</h3>
             <p>Te avisaremos cuando el administrador lo apruebe.</p>
         </div>
-        <a href="{% url 'subir_pago' %}" class="boton-secundario">Ver mis pagos</a>
+        <a href="{% url 'subir_pago' %}" class="boton-secundario bp-boton">Ver mis pagos</a>
     </section>
     {% elif pendiente_definicion %}
-    <section class="banner-pago banner-info">
-        <div>
+    <section class="bp bp-azul">
+        <span class="bp-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span>
+        <div class="bp-texto">
             <h3>Tu beca fue aprobada</h3>
             <p>Estamos definiendo el monto de tu inscripción. Te avisaremos aquí en cuanto esté listo.</p>
         </div>
     </section>
     {% elif beca_activa %}
-    <section class="banner-pago banner-exito">
-        <div>
+    <section class="bp bp-verde">
+        <span class="bp-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+        <div class="bp-texto">
             <h3>Tu beca está activa</h3>
             <p>Tu beca está vigente. ¡Mucho éxito en tus estudios!</p>
         </div>
