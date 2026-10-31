@@ -109,8 +109,8 @@
                         
                         <!-- NUESTRO BOTÓN PDF (Solo aparece si está aprobada) -->
                         {% if r.clave == "aprobada" %}
-                            <button type="button" class="boton-primario btn-sm rounded" style="background-color: #198754; border-color: #198754; font-weight: 600;" onclick="generarCartaPDF('{{ solicitud.id }}', '{{ solicitud.convocatoria.nombre|escapejs }}')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <button type="button" class="ms-boton-carta" onclick="generarCartaPDF('{{ solicitud.id }}', '{{ solicitud.convocatoria.nombre|escapejs }}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 Descargar Carta
                             </button>
                         {% endif %}
@@ -144,38 +144,50 @@
                     </div>
                 </div>
 
-                <!-- NUESTRA PLANTILLA OCULTA PARA EL PDF -->
+                <!-- Plantilla oculta de la carta de adjudicación (diseño PNGIB — Byron) -->
                 {% if r.clave == "aprobada" %}
                 <div id="plantilla-pdf-{{ solicitud.id }}" style="display: none;">
-                    <div style="padding: 50px; font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; background-color: #fff;">
-                        <div style="text-align: center; border-bottom: 2px solid #0d6efd; padding-bottom: 20px; margin-bottom: 30px;">
-                            <h2 style="color: #0d6efd; margin: 0; font-size: 24px;">Universidad Mariano Gálvez de Guatemala</h2>
-                            <h3 style="color: #555; margin: 5px 0 0; font-size: 18px;">Plataforma de Gestión de Becas</h3>
+                    <div style="width: 720px; font-family: Helvetica, Arial, sans-serif; color: #1f2937; background: #fff;">
+                        <div style="background: #1f3864; color: #fff; padding: 26px 36px; border-radius: 14px 14px 0 0;">
+                            <table style="width: 100%; border-collapse: collapse;"><tr>
+                                <td style="vertical-align: middle;">
+                                    <div style="font-size: 30px; font-weight: 800; letter-spacing: 1px;">PNGIB</div>
+                                    <div style="font-size: 13px; color: #c9d6ea; margin-top: 2px;">Plataforma Nacional para la Gestión Integral de Becas</div>
+                                </td>
+                                <td style="text-align: right; vertical-align: middle; font-size: 12px; color: #c9d6ea; line-height: 1.6;">
+                                    Resolución No. <b style="color: #fff;">{{ solicitud.id }}-{% now "Y" %}</b><br>
+                                    {% now "j \d\e F \d\e Y" %}
+                                </td>
+                            </tr></table>
                         </div>
-                        
-                        <div style="text-align: right; margin-bottom: 30px; font-size: 14px;">
-                            <strong>Fecha de Emisión:</strong> {% now "d \d\e F \d\e Y" %}<br>
-                            <strong>Resolución No.</strong> {{ solicitud.id }}-2026
-                        </div>
+                        <div style="height: 6px; background: #2563eb;"></div>
 
-                        <div style="margin-bottom: 30px;">
-                            <p style="font-size: 16px;">Estimado/a estudiante:<br>
-                            <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
-                        </div>
+                        <div style="padding: 34px 40px 30px; border: 1px solid #e5e9f2; border-top: none; border-radius: 0 0 14px 14px;">
+                            <div style="display: inline-block; padding: 6px 14px; border-radius: 999px; background: #dcfce7; color: #15803d; font-size: 12px; font-weight: 700; letter-spacing: .5px;">&#10003; RESOLUCIÓN FAVORABLE</div>
+                            <h1 style="margin: 14px 0 4px; font-size: 26px; color: #0f1b3d;">Carta de adjudicación de beca</h1>
+                            <p style="margin: 0 0 24px; font-size: 14px; color: #6b7389;">Documento generado desde la plataforma de becas</p>
 
-                        <div style="text-align: justify; margin-bottom: 40px;">
-                            <p>Por medio de la presente, nos complace informarle que, tras una exhaustiva revisión de su expediente académico y su carta de motivación, el Comité Evaluador ha decidido emitir una resolución <strong style="color: #198754;">FAVORABLE</strong> a su postulación.</p>
-                            
-                            <p>En consecuencia, se le otorga formalmente la adjudicación para la <strong>{{ solicitud.convocatoria.nombre }}</strong>.</p>
-                            
-                            <p>Le invitamos a continuar demostrando el alto nivel académico y compromiso que le han hecho acreedor/a de este beneficio. Por favor, manténgase atento/a al portal para los siguientes pasos administrativos.</p>
-                        </div>
+                            <p style="font-size: 15px; margin: 0 0 16px;">Estimado/a estudiante:<br>
+                                <b style="font-size: 17px; color: #0f1b3d;">{% firstof request.user.get_full_name request.user.email %}</b></p>
 
-                        <div style="text-align: center; margin-top: 80px;">
-                            <hr style="width: 250px; border: 1px solid #ccc; margin: 0 auto 10px;">
-                            <strong>Comité de Becas Universitarias</strong><br>
-                            <small style="color: #777;">Firma Electrónica Autorizada</small>
+                            <p style="font-size: 14.5px; line-height: 1.7; text-align: justify; margin: 0 0 12px;">Por medio de la presente, nos complace informarle que, tras una exhaustiva revisión de su expediente académico y su carta de motivación, el Comité Evaluador ha decidido emitir una resolución <b style="color: #15803d;">FAVORABLE</b> a su postulación.</p>
+                            <p style="font-size: 14.5px; line-height: 1.7; text-align: justify; margin: 0 0 20px;">En consecuencia, se le otorga formalmente la adjudicación para la <b>{{ solicitud.convocatoria.nombre }}</b>.</p>
+
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 0 0 22px; background: #f8faff; border-radius: 10px;">
+                                <tr><td style="padding: 10px 16px; color: #6b7389; border-bottom: 1px solid #e6ecf7;">Beca</td><td style="padding: 10px 16px; font-weight: 700; color: #0f1b3d; border-bottom: 1px solid #e6ecf7;">{{ solicitud.convocatoria.nombre }}</td></tr>
+                                <tr><td style="padding: 10px 16px; color: #6b7389; border-bottom: 1px solid #e6ecf7;">Nivel académico</td><td style="padding: 10px 16px; font-weight: 700; color: #0f1b3d; border-bottom: 1px solid #e6ecf7;">{{ solicitud.convocatoria.get_tipo_beca_display }}</td></tr>
+                                <tr><td style="padding: 10px 16px; color: #6b7389;">Código de solicitud</td><td style="padding: 10px 16px; font-weight: 700; color: #0f1b3d;">#{{ solicitud.id }}</td></tr>
+                            </table>
+
+                            <p style="font-size: 14.5px; line-height: 1.7; text-align: justify; margin: 0;">Le invitamos a continuar demostrando el alto nivel académico y compromiso que le han hecho acreedor/a de este beneficio. Por favor, manténgase atento/a al portal para los siguientes pasos administrativos.</p>
+
+                            <div style="text-align: center; margin-top: 56px;">
+                                <div style="width: 240px; border-top: 1.5px solid #9aa4b8; margin: 0 auto 8px;"></div>
+                                <b style="color: #0f1b3d;">Comité Evaluador de Becas</b><br>
+                                <span style="font-size: 12px; color: #8a93a6;">Firma electrónica autorizada</span>
+                            </div>
                         </div>
+                        <p style="text-align: center; font-size: 11px; color: #8a93a6; margin: 14px 0 0;">Plataforma Nacional para la Gestión Integral de Becas — Ministerio de Educación</p>
                     </div>
                 </div>
                 {% endif %}
@@ -290,19 +302,16 @@ function generarCartaPDF(solicitudId, nombreBeca) {
     // 1. Obtenemos el contenedor oculto con nuestro HTML membretado
     var elemento = document.getElementById('plantilla-pdf-' + solicitudId);
     
-    // 2. Lo clonamos y lo volvemos "visible" pero fuera de la pantalla (truco de renderizado)
-    var clon = elemento.cloneNode(true);
-    clon.style.display = 'block';
-    clon.style.position = 'absolute';
-    clon.style.top = '-9999px';
-    document.body.appendChild(clon);
+    // 2. Se le pasa a html2pdf el HTML de la plantilla. Antes se movía un clon a top:-9999px
+    //    y por eso la hoja salía en blanco (html2canvas no ve lo que está fuera de la pantalla).
+    var contenido = elemento.innerHTML;
 
     // 3. Opciones profesionales para el motor PDF
     var opt = {
-        margin:       0.5,
+        margin:       [0.4, 0.5, 0.4, 0.5],
         filename:     'Carta_Adjudicacion_' + nombreBeca.replace(/\s+/g, '_') + '.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
@@ -317,10 +326,7 @@ function generarCartaPDF(solicitudId, nombreBeca) {
     });
 
     // 5. ¡Ejecutar magia y descargar!
-    html2pdf().set(opt).from(clon).save().then(function() {
-        // Limpiamos el clon temporal
-        document.body.removeChild(clon);
-        
+    html2pdf().set(opt).from(contenido).save().then(function() {
         // Alerta de éxito
         Swal.fire({
             icon: 'success',

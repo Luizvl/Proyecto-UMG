@@ -1,17 +1,93 @@
 {% extends "base.html" %}
+{% load static panel_admin %}
 {% block titulo %}Mi panel | PNGIB{% endblock %}
+{# Panel de administrador y comité — diseño de Byron. Usa los mismos datos que el dashboard del admin. #}
 
 {% block contenido %}
-<div class="tarjeta tarjeta-ancha">
-    <h1>Bienvenido, {{ usuario.first_name|default:usuario.email }}</h1>
-    <p class="texto-secundario">Rol: <strong>{{ usuario.get_rol_display }}</strong></p>
+<section class="pa">
 
-    {% if es_estudiante %}
-        <p>Aquí verás tus convocatorias disponibles y el estado de tus solicitudes (próximamente).</p>
-    {% elif es_comite %}
-        <p>Aquí verás las solicitudes pendientes de evaluación asignadas a tu comité (próximamente).</p>
-    {% elif es_administrador %}
-        <p>Aquí podrás administrar convocatorias y comités. Mientras tanto, puedes usar el <a href="/admin/">panel administrativo</a>.</p>
+    <!-- ===== Bienvenida ===== -->
+    <div class="pa-hero">
+        <div class="pa-hero-texto">
+            <span class="etiqueta etiqueta-mayus">{{ usuario.get_rol_display }}</span>
+            <h1>Hola, {% firstof usuario.first_name usuario.email %}</h1>
+            {% if es_comite %}
+                <p>Aquí verás las solicitudes pendientes de evaluación asignadas a tu comité (próximamente).</p>
+            {% else %}
+                <p>Desde aquí puedes administrar convocatorias, solicitudes, comités y pagos de la plataforma.</p>
+            {% endif %}
+            {% if usuario.is_staff %}
+            <div class="pa-hero-botones">
+                <a href="{% url 'admin:index' %}" class="boton-primario boton-grande">Ir al panel administrativo &rarr;</a>
+                <a href="{% url 'convocatorias:lista' %}" class="boton-secundario boton-grande">Ver convocatorias</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="pa-hero-visual" aria-hidden="true">
+            <span class="pa-mancha"></span>
+            <img src="{% static 'img/admin-edificio.webp' %}" alt="" class="pa-edificio">
+            <img src="{% static 'img/login-escudo.webp' %}" alt="" class="pa-escudo">
+            <img src="{% static 'img/destellos.webp' %}" alt="" class="pa-destellos">
+        </div>
+    </div>
+
+    {% if usuario.is_staff %}
+    {% datos_dashboard as d %}
+
+    <!-- ===== Resumen ===== -->
+    <div class="pa-tarjetas">
+        {% for t in d.tarjetas %}
+        <a href="{{ t.url }}" class="pa-tarjeta pa-{{ t.color }}">
+            <span class="pa-icono"><i style="--ico:url('{% static 'img/admin/'|add:t.icono|add:'.svg' %}')"></i></span>
+            <span class="pa-tarjeta-datos">
+                <small>{{ t.titulo }}</small>
+                <strong>{{ t.valor }}</strong>
+                <em>{{ t.detalle }}</em>
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="pa-rejilla">
+        <!-- ===== Accesos rápidos ===== -->
+        <div class="pa-caja">
+            <h2>Accesos rápidos</h2>
+            <div class="pa-accesos">
+                {% url 'admin:convocatorias_convocatoria_add' as u %}{% if u %}
+                <a href="{{ u }}" class="pa-acceso"><span class="pa-icono pa-azul"><i style="--ico:url('{% static 'img/admin/anadir.svg' %}')"></i></span><span><b>Nueva convocatoria</b><small>Publicar una beca</small></span></a>{% endif %}
+                {% url 'admin:solicitudes_solicitud_changelist' as u %}{% if u %}
+                <a href="{{ u }}?estado__exact=PENDIENTE" class="pa-acceso"><span class="pa-icono pa-naranja"><i style="--ico:url('{% static 'img/admin/reloj.svg' %}')"></i></span><span><b>Solicitudes pendientes</b><small>Revisar y evaluar</small></span></a>{% endif %}
+                {% url 'admin:pagos_pago_changelist' as u %}{% if u %}
+                <a href="{{ u }}?estado__exact=pendiente" class="pa-acceso"><span class="pa-icono pa-verde"><i style="--ico:url('{% static 'img/admin/pagos.svg' %}')"></i></span><span><b>Pagos por revisar</b><small>{{ d.pagos_revision|default:0 }} comprobante{{ d.pagos_revision|pluralize }} en revisión</small></span></a>{% endif %}
+                {% url 'admin:evaluaciones_comite_changelist' as u %}{% if u %}
+                <a href="{{ u }}" class="pa-acceso"><span class="pa-icono pa-morado"><i style="--ico:url('{% static 'img/admin/grupos_comites.svg' %}')"></i></span><span><b>Comités evaluadores</b><small>Asignar integrantes</small></span></a>{% endif %}
+            </div>
+        </div>
+
+        <!-- ===== Solicitudes por estado ===== -->
+        <div class="pa-caja">
+            <h2>Solicitudes por estado</h2>
+            <div class="pa-dona-zona">
+                <div class="pa-dona" style="background: {{ d.dona }}">
+                    <span><strong>{{ d.total_solicitudes }}</strong><small>solicitud{{ d.total_solicitudes|pluralize:"es" }}</small></span>
+                </div>
+                <ul class="pa-leyenda">
+                    {% for e in d.estados %}
+                    <li><i style="background: {{ e.color }}"></i><span>{{ e.etiqueta }}</span><b>{{ e.n }}</b></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="pa-caja pa-aviso">
+        <span class="pa-icono pa-morado"><i style="--ico:url('{% static 'img/admin/evaluaciones.svg' %}')"></i></span>
+        <div>
+            <h2>Tus evaluaciones aparecerán aquí</h2>
+            <p>Cuando se te asigne a un comité podrás revisar las solicitudes desde esta sección.</p>
+        </div>
+    </div>
     {% endif %}
-</div>
+</section>
 {% endblock %}

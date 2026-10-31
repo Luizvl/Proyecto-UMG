@@ -19,12 +19,16 @@ MENU = [
     ("solicitudes", "solicitud", "Solicitudes", "documento_solicitudes", "Gestión"),
     ("evaluaciones", "evaluacion", "Evaluaciones", "evaluaciones", "Gestión"),
     ("evaluaciones", "comite", "Comités evaluadores", "grupos_comites", "Gestión"),
+    ("pagos", "pago", "Pagos", "pagos", "Pagos"),
+    ("pagos", "condicionpago", "Condiciones de pago", "configuracion", "Pagos"),
+    ("solicitudes", "auditoriasolicitud", "Auditoría", "auditoria", "Sistema"),
     ("auth", "group", "Grupos y permisos", "clave_permisos", "Sistema"),
 ]
 
 COLORES_SOLICITUD = {
     "PENDIENTE": "#f59e0b",
     "EN_EVALUACION": "#3b82f6",
+    "PENDIENTE_SEGUNDA_APROBACION": "#8b5cf6",
     "APROBADA": "#10b981",
     "RECHAZADA": "#ef4444",
 }
@@ -63,7 +67,7 @@ def menu_admin(available_apps, ruta):
                 "texto": m["name"], "icono": "plantillas", "url": m["admin_url"],
                 "activo": ruta.startswith(m["admin_url"]),
             })
-    orden = ["Gestión", "Sistema", "Otros"]
+    orden = ["Gestión", "Pagos", "Sistema", "Otros"]
     return [(s, secciones[s]) for s in orden if s in secciones]
 
 
@@ -148,11 +152,14 @@ def datos_dashboard():
     } for s in Solicitud.objects.select_related("estudiante", "convocatoria")[:5]]
 
     promedio = Evaluacion.objects.aggregate(p=Avg("puntaje"))["p"]
+    Pago = _modelo("pagos", "Pago")
+    pagos_revision = Pago.objects.filter(estado="pendiente").count() if Pago else None
 
     return {
         "tarjetas": tarjetas, "estados": estados, "dona": dona, "total_solicitudes": solicitudes,
         "recientes": recientes, "ultimas": ultimas,
         "evaluaciones": Evaluacion.objects.count(),
+        "pagos_revision": pagos_revision,
         "promedio": round(promedio, 1) if promedio is not None else None,
         "hoy": hoy,
     }
@@ -181,7 +188,8 @@ def resumen_lista(opts):
         ]
     elif clave == "solicitudes.solicitud":
         conteo = dict(Modelo.objects.values_list("estado").annotate(n=Count("id")))
-        colores = {"PENDIENTE": "naranja", "EN_EVALUACION": "azul", "APROBADA": "verde", "RECHAZADA": "rojo"}
+        colores = {"PENDIENTE": "naranja", "EN_EVALUACION": "azul", "PENDIENTE_SEGUNDA_APROBACION": "morado",
+                   "APROBADA": "verde", "RECHAZADA": "rojo"}
         for valor, etiqueta in Modelo.ESTADOS:
             tarjetas.append({"titulo": etiqueta, "valor": conteo.get(valor, 0),
                              "color": colores.get(valor, "azul"), "url": f"{base}?estado__exact={valor}"})
@@ -191,6 +199,12 @@ def resumen_lista(opts):
         for valor, etiqueta in Modelo.Rol.choices:
             tarjetas.append({"titulo": etiqueta if valor != "COMITE" else "Comité", "valor": conteo.get(valor, 0),
                              "color": colores.get(valor, "azul"), "url": f"{base}?rol__exact={valor}"})
+    elif clave == "pagos.pago":
+        conteo = dict(Modelo.objects.values_list("estado").annotate(n=Count("id")))
+        colores = {"pendiente": "naranja", "aprobado": "verde", "rechazado": "rojo"}
+        for valor, etiqueta in Modelo.ESTADOS_PAGO:
+            tarjetas.append({"titulo": etiqueta, "valor": conteo.get(valor, 0),
+                             "color": colores.get(valor, "azul"), "url": f"{base}?estado__exact={valor}"})
     elif clave == "evaluaciones.evaluacion":
         prom = Modelo.objects.aggregate(p=Avg("puntaje"))["p"]
         tarjetas.append({"titulo": "Puntaje promedio", "valor": round(prom, 1) if prom is not None else "—",

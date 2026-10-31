@@ -10,7 +10,7 @@
     }
 
     // Estados y roles como etiquetas de colores
-    var columnas = ["estado", "rol", "tipo_beca", "nivel_academico"];
+    var columnas = ["estado", "rol", "tipo_beca", "nivel_academico", "accion"];
     columnas.forEach(function (campo) {
         document.querySelectorAll("#result_list td.field-" + campo).forEach(function (td) {
             var texto = td.textContent.trim();

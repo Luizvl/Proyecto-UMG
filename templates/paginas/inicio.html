@@ -76,14 +76,30 @@
     </div>
 </section>
 
-<!-- ===== PROGRAMAS (Tu sección de niveles académicos intacta) ===== -->
-<section class="inst-seccion">
-    <span class="etiqueta">Programas</span>
+<!-- ===== PROGRAMAS: becas por nivel académico (diseño de Byron) ===== -->
+<section class="programas">
+    <span class="etiqueta etiqueta-mayus">Programas</span>
     <h2>Becas por nivel académico</h2>
-    <div class="inst-rejilla inst-tres">
-        <article class="inst-tarjeta"><h3>Nivel Medio</h3><p>Apoyo para básico y diversificado.</p></article>
-        <article class="inst-tarjeta"><h3>Universitario</h3><p>Becas para estudios de pregrado.</p></article>
-        <article class="inst-tarjeta"><h3>Posgrado</h3><p>Apoyo para maestrías y especializaciones.</p></article>
+    <p class="programas-sub">Encuentra la beca que corresponde a tu etapa de estudios.</p>
+    <div class="programas-rejilla">
+        <a href="{% url 'convocatorias:lista' %}" class="programa">
+            <span class="programa-img programa-verde"><img src="{% static 'img/conv-medio.webp' %}" alt=""></span>
+            <span class="programa-nivel">Nivel Medio</span>
+            <p>Apoyo para básico y diversificado.</p>
+            <span class="programa-link">Ver convocatorias &rarr;</span>
+        </a>
+        <a href="{% url 'convocatorias:lista' %}" class="programa">
+            <span class="programa-img programa-azul"><img src="{% static 'img/conv-universitario.webp' %}" alt=""></span>
+            <span class="programa-nivel">Universitario</span>
+            <p>Becas para estudios de pregrado.</p>
+            <span class="programa-link">Ver convocatorias &rarr;</span>
+        </a>
+        <a href="{% url 'convocatorias:lista' %}" class="programa">
+            <span class="programa-img programa-morado"><img src="{% static 'img/conv-posgrado.webp' %}" alt=""></span>
+            <span class="programa-nivel">Posgrado</span>
+            <p>Apoyo para maestrías y especializaciones.</p>
+            <span class="programa-link">Ver convocatorias &rarr;</span>
+        </a>
     </div>
 </section>
 

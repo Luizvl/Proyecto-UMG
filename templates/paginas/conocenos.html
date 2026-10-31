@@ -1,48 +1,119 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}Conócenos | PNGIB{% endblock %}
+{# Diseño visual — Byron. Los textos son los que redactó el grupo. #}
 
 {% block contenido %}
-<section class="inst-seccion" id="institucional" style="margin-top: 3rem;">
-    <div style="text-align: center; margin-bottom: 3rem;">
-        <span class="etiqueta">Quiénes somos</span>
-        <h2>Un compromiso con la educación de Guatemala</h2>
-        <p class="texto-secundario inst-intro" style="max-width: 800px; margin: 1rem auto;">
+
+<!-- ===== HERO ===== -->
+<section class="cn-hero">
+    <svg class="cf-ola" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 140 C 260 60, 520 60, 760 130 S 1200 230, 1440 120 L1440 260 L0 260 Z" fill="#eef3fd"/>
+        <path d="M0 190 C 300 120, 640 150, 900 200 S 1260 240, 1440 180 L1440 260 L0 260 Z" fill="#f7f9fe"/>
+    </svg>
+
+    <div class="cn-texto">
+        <span class="etiqueta etiqueta-mayus">Quiénes somos</span>
+        <h1>Un compromiso con la <span class="resaltado">educación</span> de Guatemala</h1>
+        <p class="cn-subtitulo">
             La Plataforma Nacional para la Gestión Integral de Becas centraliza en un solo lugar
             la postulación, la evaluación y el seguimiento de las becas del Ministerio de Educación.
         </p>
+        <ul class="cn-puntos">
+            <li><i class="cn-i-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></i>Postulación</li>
+            <li><i class="cn-i-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></i>Evaluación</li>
+            <li><i class="cn-i-morado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 7 4-14 3 7h4"/></svg></i>Seguimiento</li>
+        </ul>
     </div>
 
-    <div class="inst-rejilla inst-dos">
-        <article class="inst-tarjeta">
-            <div class="inst-icono">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
-            </div>
-            <h3>Nuestra misión</h3>
-            <p>Facilitar el acceso a becas educativas mediante un proceso digital, transparente y
-               trazable, que permita a cada estudiante postularse, dar seguimiento a su solicitud
-               y conocer su resultado de forma clara y oportuna.</p>
-        </article>
-        <article class="inst-tarjeta">
-            <div class="inst-icono">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </div>
-            <h3>Nuestra visión</h3>
-            <p>Ser la plataforma de referencia para la gestión de becas del país, reconocida por la
-               equidad de sus procesos, la transparencia de sus decisiones y su aporte a que más
-               jóvenes continúen sus estudios.</p>
-        </article>
+    <div class="cn-visual" aria-hidden="true">
+        <span class="cn-mancha"></span>
+        <img src="{% static 'img/admin-edificio.webp' %}" alt="" class="cn-edificio">
+        <img src="{% static 'img/login-hojas.webp' %}"    alt="" class="cn-hojas">
+        <img src="{% static 'img/destellos.webp' %}"      alt="" class="cn-destellos">
+        <img src="{% static 'img/login-laptop.webp' %}"   alt="" class="cn-laptop">
+        <img src="{% static 'img/login-escudo.webp' %}"   alt="" class="cn-escudo">
     </div>
 </section>
 
-<section class="inst-seccion">
-    <span class="etiqueta">Nuestros valores</span>
+<!-- ===== MISIÓN Y VISIÓN ===== -->
+<section class="cn-mv" id="institucional">
+    <article class="cn-mv-tarjeta cn-mision">
+        <span class="cn-mv-icono">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+        </span>
+        <span class="cn-mv-etiqueta">Lo que hacemos</span>
+        <h2>Nuestra misión</h2>
+        <p>Facilitar el acceso a becas educativas mediante un proceso digital, transparente y
+           trazable, que permita a cada estudiante postularse, dar seguimiento a su solicitud
+           y conocer su resultado de forma clara y oportuna.</p>
+    </article>
+    <article class="cn-mv-tarjeta cn-vision">
+        <span class="cn-mv-icono">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <span class="cn-mv-etiqueta">Hacia dónde vamos</span>
+        <h2>Nuestra visión</h2>
+        <p>Ser la plataforma de referencia para la gestión de becas del país, reconocida por la
+           equidad de sus procesos, la transparencia de sus decisiones y su aporte a que más
+           jóvenes continúen sus estudios.</p>
+    </article>
+</section>
+
+<!-- ===== VALORES ===== -->
+<section class="cn-valores">
+    <span class="etiqueta etiqueta-mayus">Nuestros valores</span>
     <h2>Principios que guían cada proceso</h2>
-    <div class="inst-rejilla inst-cuatro">
-        <article class="inst-valor"><h3>Transparencia</h3><p>Cada solicitud conserva su historial de cambios.</p></article>
-        <article class="inst-valor"><h3>Equidad</h3><p>Las mismas reglas para todos los postulantes.</p></article>
-        <article class="inst-valor"><h3>Trazabilidad</h3><p>Sabes en qué etapa está tu solicitud.</p></article>
-        <article class="inst-valor"><h3>Accesibilidad</h3><p>Disponible desde computadora, tableta o celular.</p></article>
+    <div class="cn-valores-rejilla">
+        <article class="cn-valor">
+            <i class="cn-i-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></i>
+            <h3>Transparencia</h3>
+            <p>Cada solicitud conserva su historial de cambios.</p>
+        </article>
+        <article class="cn-valor">
+            <i class="cn-i-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7h12M6 7l-3 7a3 3 0 0 0 6 0zM18 7l-3 7a3 3 0 0 0 6 0z"/></svg></i>
+            <h3>Equidad</h3>
+            <p>Las mismas reglas para todos los postulantes.</p>
+        </article>
+        <article class="cn-valor">
+            <i class="cn-i-ambar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></svg></i>
+            <h3>Trazabilidad</h3>
+            <p>Sabes en qué etapa está tu solicitud.</p>
+        </article>
+        <article class="cn-valor">
+            <i class="cn-i-morado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M6 18h6"/><rect x="17" y="8" width="5" height="11" rx="1.5"/></svg></i>
+            <h3>Accesibilidad</h3>
+            <p>Disponible desde computadora, tableta o celular.</p>
+        </article>
     </div>
 </section>
+
+<!-- ===== BANNER FINAL (mismo estilo que Cómo funciona) ===== -->
+<section class="cf-banner">
+    <svg class="cf-deco-izq" viewBox="0 0 320 150" aria-hidden="true">
+        <circle cx="60"  cy="130" r="70" fill="#dbe7fd"/>
+        <circle cx="230" cy="70"  r="22" fill="#c9dbfb"/>
+        <circle cx="270" cy="110" r="6"  fill="#9fbdf6"/>
+        <circle cx="200" cy="18"  r="5"  fill="#9fbdf6"/>
+    </svg>
+    <svg class="cf-deco-der" viewBox="0 0 300 150" aria-hidden="true">
+        <circle cx="270" cy="40"  r="48" fill="#dbe7fd"/>
+        <circle cx="205" cy="128" r="9"  fill="#fde7a8"/>
+        <path d="M120 150 C 128 118, 150 112, 168 124 S 196 126, 190 100 S 176 76, 172 70"
+              fill="none" stroke="#8fb0f2" stroke-width="2.5" stroke-dasharray="7 7" stroke-linecap="round"/>
+    </svg>
+    <img src="{% static 'img/birrete.webp' %}" alt="" class="cf-banner-birrete">
+    <div class="cf-banner-texto">
+        <span class="cf-banner-etiqueta">Tu futuro empieza aquí</span>
+        <h2>Conoce las becas disponibles para ti</h2>
+        <p>Revisa las convocatorias activas y postúlate en pocos pasos.</p>
+    </div>
+    {% if user.is_authenticated %}
+        <a href="{% url 'convocatorias:lista' %}" class="boton-primario boton-grande">Ver convocatorias &rarr;</a>
+    {% else %}
+        <a href="{% url 'usuarios:registro' %}" class="boton-primario boton-grande">Crear mi cuenta &rarr;</a>
+    {% endif %}
+    <img src="{% static 'img/avion-papel.webp' %}" alt="" class="cf-banner-avion">
+</section>
+
 {% endblock %}

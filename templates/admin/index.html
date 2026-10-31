@@ -140,6 +140,10 @@
                 {% url 'admin:solicitudes_solicitud_changelist' as u %}{% if u %}
                 <a href="{{ u }}?estado__exact=PENDIENTE"><i class="pn-ico" style="--ico:url('{% static 'img/admin/reloj.svg' %}')"></i><span>Revisar pendientes<small>Solicitudes sin evaluar</small></span></a>{% endif %}
             </div>
+            {% if d.pagos_revision is not None %}{% url 'admin:pagos_pago_changelist' as u %}
+            <a class="pn-mini-dato pn-mini-enlace" href="{{ u }}?estado__exact=pendiente">
+                <span>Pagos por revisar</span><b>{{ d.pagos_revision }}</b>
+            </a>{% endif %}
             <div class="pn-mini-dato">
                 <span>Evaluaciones registradas</span><b>{{ d.evaluaciones }}</b>
             </div>

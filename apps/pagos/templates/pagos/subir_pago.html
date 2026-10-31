@@ -1,196 +1,210 @@
 {% extends 'base.html' %}
 {% load static %}
+{# Diseño visual — Byron. La lógica es la de la vista subir_pago (no cambia campos ni nombres). #}
 
-{% block titulo %}Subir pago - PNGIB{% endblock %}
-
-{% block css_extra %}
-<style>
-    /* Diseño visual de Byron (Grid de 2 columnas) */
-    .pago-seccion { 
-        max-width: 1200px; 
-        margin: 4rem auto; 
-        padding: 0 1.5rem; 
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        gap: 4rem; 
-        align-items: start;
-    }
-    
-    .pago-encabezado .etiqueta {
-        background-color: #e8f0fe;
-        color: #1a73e8;
-        padding: 0.4rem 1rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        display: inline-block;
-        margin-bottom: 1rem;
-    }
-
-    .pago-encabezado h1 { font-size: 2.5rem; color: #0b132b; line-height: 1.2; margin-bottom: 1rem; }
-    .pago-encabezado p { color: #555; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
-
-    /* Tarjetas estilo flotante */
-    .tarjeta-moderna {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 2.5rem;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(0,0,0,0.02);
-    }
-
-    /* Tabla de resumen de cobro (Estilo "Recibo") */
-    .resumen-moderno {
-        width: 100%;
-        background: #f9fbfc;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        border: 1px solid #eef0f4;
-    }
-    .resumen-moderno table { width: 100%; border-collapse: collapse; }
-    .resumen-moderno th { text-align: left; color: #555; font-weight: normal; padding: 0.5rem 0; border-bottom: 1px dashed #e5e5e5; }
-    .resumen-moderno td { text-align: right; color: #0b132b; font-weight: 600; padding: 0.5rem 0; border-bottom: 1px dashed #e5e5e5; }
-    .resumen-moderno tr:last-child th, .resumen-moderno tr:last-child td { border-bottom: none; font-size: 1.2rem; color: #1a73e8; padding-top: 1rem; }
-
-    /* Formulario profesional */
-    .tarjeta-moderna form p { margin-bottom: 1.5rem; }
-    .tarjeta-moderna label { display: block; font-weight: 600; color: #0b132b; margin-bottom: 0.5rem; }
-    .tarjeta-moderna input[type="text"], .tarjeta-moderna input[type="number"],
-    .tarjeta-moderna input[type="file"], .tarjeta-moderna select {
-        width: 100%; padding: 0.8rem 1rem; border: 2px solid #eef0f4; border-radius: 10px; font-size: 1rem;
-        background-color: #f9fbfc; transition: border-color 0.3s;
-    }
-    .tarjeta-moderna input:focus { border-color: #1a73e8; outline: none; background-color: #fff; }
-    
-    .boton-pago {
-        background-color: #0b132b; color: white; width: 100%; padding: 1rem; border-radius: 10px;
-        font-size: 1.1rem; font-weight: 600; border: none; cursor: pointer; transition: 0.3s; margin-top: 1rem;
-    }
-    .boton-pago:hover { background-color: #1a73e8; transform: translateY(-2px); }
-
-    /* Imagen lateral */
-    .pago-imagen-wrapper img { width: 100%; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); object-fit: cover; }
-
-    /* Historial */
-    .historial-seccion { max-width: 1200px; margin: 0 auto 5rem auto; padding: 0 1.5rem; }
-    .historial-seccion h2 { color: #0b132b; margin-bottom: 1.5rem; font-size: 1.8rem; }
-    .tabla-moderna { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
-    .tabla-moderna th { background: #f8faff; color: #555; font-weight: 600; padding: 1rem 1.5rem; text-align: left; text-transform: uppercase; font-size: 0.85rem; }
-    .tabla-moderna td { padding: 1rem 1.5rem; border-bottom: 1px solid #f0f2f5; color: #333; }
-    
-    /* Etiquetas de estado (Badges) */
-    .badge-moderno { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
-    .badge-verde { background: #d4edda; color: #155724; }
-    .badge-rojo { background: #f8d7da; color: #721c24; }
-    .badge-amarillo { background: #fff3cd; color: #856404; }
-
-    @media (max-width: 900px) {
-        .pago-seccion { grid-template-columns: 1fr; gap: 2rem; }
-        .pago-imagen-wrapper { display: none; }
-        .tabla-moderna { display: block; overflow-x: auto; white-space: nowrap; }
-    }
-</style>
-{% endblock %}
+{% block titulo %}Subir comprobante de pago | PNGIB{% endblock %}
 
 {% block contenido %}
-<div class="pago-seccion">
-    <!-- Columna Izquierda: Lógica de pago -->
-    <div class="pago-columna-izq">
-        
-        {% if puede_pagar %}
-            <div class="pago-encabezado">
-                <span class="etiqueta">Paso Final</span>
-                <h1>Activa tu beca <br><span style="color: #1a73e8;">subiendo tu recibo</span></h1>
-                <p>Verifica el monto asignado según la cobertura de tu beca y adjunta el comprobante.</p>
-            </div>
 
-            <div class="tarjeta-moderna">
-                <!-- Resumen de cobro adaptado a tu lógica -->
-                <div class="resumen-moderno">
-                    <table>
-                        <tr><th>Beca asignada</th><td>{{ solicitud.convocatoria.nombre }}</td></tr>
-                        <tr><th>Cobertura aprobada</th><td>{{ condicion.descripcion_cobertura }} ({{ condicion.cobertura_porcentaje }}%)</td></tr>
-                        <tr><th>Inscripción base</th><td>Q{{ condicion.monto_base }}</td></tr>
-                        <tr><th>Total a transferir</th><td><strong>Q{{ condicion.monto_a_pagar }}</strong></td></tr>
-                    </table>
+{% if puede_pagar %}
+<!-- ===== Pagar inscripción ===== -->
+<section class="ap pg">
+    <div class="ap-principal">
+        <div class="ap-head">
+            <div>
+                <span class="ap-badge ap-badge-activa"><i></i> Beca aprobada</span>
+                <h1>Activa tu beca subiendo tu comprobante</h1>
+                <p>Paga tu inscripción con el descuento de tu beca y adjunta la foto o captura del recibo.</p>
+            </div>
+            <div class="ap-visual" aria-hidden="true">
+                <span class="ap-b b1"></span><span class="ap-b b2"></span><span class="ap-b b3"></span>
+                <img src="{% static 'img/tarjeta-documento.webp' %}" alt="" class="pg-doc">
+                <img src="{% static 'img/check.webp' %}" alt="" class="pg-check">
+            </div>
+        </div>
+
+        <!-- Recibo con el monto que calcula el sistema -->
+        <div class="pg-recibo">
+            <div class="pg-recibo-cab">
+                <span>Beca asignada</span>
+                <b>{{ solicitud.convocatoria.nombre }}</b>
+            </div>
+            <dl>
+                <div><dt>Cobertura aprobada</dt><dd><span class="pg-chip">{{ condicion.descripcion_cobertura }} · {{ condicion.cobertura_porcentaje }}%</span></dd></div>
+                <div><dt>Inscripción base</dt><dd>Q{{ condicion.monto_base }}</dd></div>
+                <div><dt>Descuento de tu beca</dt><dd class="pg-desc">− {{ condicion.cobertura_porcentaje }}%</dd></div>
+            </dl>
+            <div class="pg-total">
+                <span>Total a pagar</span>
+                <strong>Q{{ condicion.monto_a_pagar }}</strong>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="ap-form" novalidate data-form-pago>
+            {% csrf_token %}
+            <input type="hidden" name="solicitud" value="{{ solicitud.pk }}">
+
+            {% if form.non_field_errors %}<div class="ap-alerta">{{ form.non_field_errors.0 }}</div>{% endif %}
+
+            <span class="ap-label">Comprobante de pago <span class="req">*</span></span>
+            <label class="ap-drop {% if form.comprobante.errors %}con-error{% endif %}" data-drop>
+                <input type="file" name="{{ form.comprobante.html_name }}" accept="image/*" data-archivo hidden>
+                <div class="ap-drop-vacio">
+                    <svg class="ap-nube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1-.9-9.9A6 6 0 0 1 17.7 9 4.5 4.5 0 0 1 17 18"/><path d="M12 12v8M9 15l3-3 3 3"/></svg>
+                    <strong>Arrastra y suelta la foto de tu recibo aquí</strong>
+                    <small>o haz clic para seleccionarla</small>
+                    <span class="ap-boton-archivo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+                        Seleccionar imagen
+                    </span>
+                    <em>Foto o captura legible del recibo (JPG o PNG). Tamaño máximo: 5 MB.</em>
                 </div>
+                <div class="ap-drop-lleno" hidden>
+                    <img class="pg-mini" alt="" data-mini>
+                    <span class="ap-archivo-info"><b data-nombre></b><small data-peso></small></span>
+                    <button type="button" class="ap-quitar" data-quitar aria-label="Quitar imagen">&times;</button>
+                </div>
+            </label>
+            <p class="ap-error" data-error {% if not form.comprobante.errors %}hidden{% endif %}>
+                <svg viewBox="0 0 24 24"><path d="M12 2 1 21h22z" fill="currentColor"/><rect x="11" y="9" width="2" height="6" rx="1" fill="#fff"/><circle cx="12" cy="18" r="1.2" fill="#fff"/></svg>
+                <span>{% if form.comprobante.errors %}{{ form.comprobante.errors.0 }}{% else %}Adjunta la imagen de tu comprobante.{% endif %}</span>
+            </p>
 
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <!-- Tu input oculto original -->
-                    <input type="hidden" name="solicitud" value="{{ solicitud.pk }}">
-                    {{ form.as_p }}
-                    <button type="submit" class="boton-pago">Enviar comprobante &rarr;</button>
-                </form>
+            <div class="ap-botones">
+                <a href="{% url 'solicitudes:panel_estudiante' %}" class="ap-cancelar">&larr; Volver</a>
+                <button type="submit" class="boton-primario ap-enviar">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 11.2 21 3.5l-7.7 18.5-2.4-7.4z"/></svg>
+                    Enviar comprobante
+                </button>
             </div>
-        {% else %}
-            <!-- Mensaje cuando ya pagó -->
-            <div class="pago-encabezado">
-                <span class="etiqueta" style="background-color: #d4edda; color: #155724;">Pago Registrado</span>
-                <h1>Todo listo <br><span style="color: #155724;">por ahora</span></h1>
-            </div>
-            <div class="tarjeta-moderna" style="text-align: center; padding: 4rem 2rem;">
-                <svg style="width: 64px; height: 64px; color: #28a745; margin-bottom: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <h3 style="color: #0b132b; margin-bottom: 0.5rem;">Ya tienes un pago en proceso</h3>
-                <p style="color: #555;">No necesitas subir otro comprobante. Revisa el estado en la tabla inferior.</p>
-            </div>
-        {% endif %}
-
+        </form>
     </div>
 
-    <!-- Columna Derecha: Imagen de Byron -->
-    <div class="pago-imagen-wrapper">
-        <img src="{% static 'img/estudiante-pago.png' %}" alt="Estudiante gestionando su beca">
-    </div>
-</div>
+    <aside class="ap-lateral">
+        <div class="ap-pasos">
+            <div class="ap-lat-head">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></i>
+                <h2>¿Cómo activo mi beca?</h2>
+            </div>
+            <ol>
+                <li><span>1</span><div><b>Paga tu inscripción</b><small>Realiza el pago por el total indicado: Q{{ condicion.monto_a_pagar }}.</small></div></li>
+                <li><span>2</span><div><b>Toma una foto del recibo</b><small>Que se lean bien la fecha, el monto y el número de boleta.</small></div></li>
+                <li><span>3</span><div><b>Súbela y espera la revisión</b><small>El administrador la revisa y tu beca queda activa.</small></div></li>
+            </ol>
+        </div>
+        <div>
+            <div class="ap-lat-head">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 3 7v5c0 5 4 8 9 9 5-1 9-4 9-9V7z"/><path d="m9 12 2 2 4-4"/></svg></i>
+                <h2>Tu pago es seguro</h2>
+            </div>
+            <p class="ap-lat-desc">El monto lo calcula el sistema según tu cobertura. Solo necesitas adjuntar el comprobante; no se te pedirán datos de tarjeta.</p>
+        </div>
+    </aside>
+</section>
 
-<!-- Sección de Historial usando tu iteración exacta -->
-<div class="historial-seccion">
-    <h2>Mi historial de pagos</h2>
+{% else %}
+<!-- ===== Sin pagos pendientes ===== -->
+<section class="pg-listo">
+    <span class="pg-listo-icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    </span>
+    <div>
+        <span class="ap-badge ap-badge-activa"><i></i> Pago registrado</span>
+        <h1>Todo listo por ahora</h1>
+        <p>No tienes pagos pendientes. Revisa abajo el estado de los comprobantes que ya enviaste.</p>
+    </div>
+    <a href="{% url 'solicitudes:panel_estudiante' %}" class="boton-secundario">Ver mis solicitudes</a>
+</section>
+{% endif %}
+
+<!-- ===== Historial de pagos ===== -->
+<section class="pg-historial">
+    <div class="pg-historial-cab">
+        <h2>Mi historial de pagos</h2>
+        <span class="pg-contador">{{ historial_pagos|length }} pago{{ historial_pagos|length|pluralize }}</span>
+    </div>
     {% if historial_pagos %}
-        <table class="tabla-moderna">
+    <div class="pg-tabla-scroll">
+        <table class="pg-tabla">
             <thead>
-                <tr>
-                    <th># Folio</th>
-                    <th>Beca</th>
-                    <th>Concepto</th>
-                    <th>Monto</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                    <th>Comprobante</th>
-                </tr>
+                <tr><th>Folio</th><th>Beca</th><th>Monto</th><th>Fecha</th><th>Estado</th><th>Comprobante</th></tr>
             </thead>
             <tbody>
-                {% for pago in historial_pagos %}
+            {% for pago in historial_pagos %}
                 <tr>
-                    <td><strong>{{ pago.pk }}</strong></td>
-                    <td>{{ pago.solicitud.convocatoria.nombre|default:"-" }}</td>
-                    <td>{{ pago.concepto }}</td>
-                    <td><strong>Q{{ pago.monto_pagado }}</strong></td>
-                    <td>{{ pago.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                    <td><b>#{{ pago.pk }}</b></td>
                     <td>
-                        <span class="badge-moderno {% if pago.estado == 'aprobado' %}badge-verde{% elif pago.estado == 'rechazado' %}badge-rojo{% else %}badge-amarillo{% endif %}">
-                            {{ pago.get_estado_display }}
-                        </span>
-                        {% if pago.estado == 'rechazado' and pago.notas_admin %}
-                            <br><small style="color: #d93025; font-size: 0.8rem; margin-top: 4px; display: block;">{{ pago.notas_admin }}</small>
-                        {% endif %}
+                        <b>{{ pago.solicitud.convocatoria.nombre|default:"—" }}</b>
+                        <small>{{ pago.concepto }}</small>
                     </td>
+                    <td><b>Q{{ pago.monto_pagado }}</b></td>
+                    <td class="pg-nowrap">{{ pago.fecha_creacion|date:"d M Y, H:i" }}</td>
                     <td>
-                        {% if pago.comprobante %}
-                            <a href="{{ pago.comprobante.url }}" target="_blank" style="color: #1a73e8; font-weight: 600; text-decoration: none;">Ver PDF/IMG</a>
-                        {% else %}-{% endif %}
+                        <span class="pg-estado pg-estado-{{ pago.estado }}">{{ pago.get_estado_display }}</span>
+                        {% if pago.estado == 'rechazado' and pago.notas_admin %}<small class="pg-nota">{{ pago.notas_admin }}</small>{% endif %}
                     </td>
+                    <td>{% if pago.comprobante %}<a href="{{ pago.comprobante.url }}" target="_blank" rel="noopener" class="pg-ver">Ver imagen</a>{% else %}—{% endif %}</td>
                 </tr>
-                {% endfor %}
+            {% endfor %}
             </tbody>
         </table>
+    </div>
     {% else %}
-        <div class="tarjeta-moderna" style="text-align: center; padding: 2rem;">
-            <p style="color: #777; margin: 0;">Aún no has registrado ningún pago.</p>
-        </div>
+    <p class="pg-vacio">Aún no has registrado ningún pago.</p>
     {% endif %}
-</div>
-{% endblock contenido %}
+</section>
+{% endblock %}
+
+{% block js_extra %}
+{% if puede_pagar %}
+<script>
+/* Vista previa del comprobante y validación antes de enviar (solo visual) */
+(function () {
+    var form = document.querySelector('[data-form-pago]');
+    var drop = form.querySelector('[data-drop]');
+    var input = drop.querySelector('[data-archivo]');
+    var error = form.querySelector('[data-error]');
+    var MAX = 5 * 1024 * 1024;
+
+    function mostrarError(texto) {
+        error.querySelector('span').textContent = texto;
+        error.hidden = false;
+        drop.classList.add('con-error');
+    }
+
+    function pintar() {
+        var f = input.files[0];
+        var lleno = !!f, problema = '';
+        if (f && !/^image\//.test(f.type)) { problema = 'El comprobante debe ser una imagen (JPG o PNG).'; lleno = false; }
+        else if (f && f.size > MAX) { problema = 'La imagen no debe superar 5 MB.'; lleno = false; }
+
+        drop.querySelector('.ap-drop-vacio').hidden = lleno;
+        drop.querySelector('.ap-drop-lleno').hidden = !lleno;
+        drop.classList.toggle('lleno', lleno);
+
+        if (lleno) {
+            drop.querySelector('[data-nombre]').textContent = f.name;
+            drop.querySelector('[data-peso]').textContent = f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB · listo para enviar' : (f.size / 1048576).toFixed(1) + ' MB · listo para enviar';
+            drop.querySelector('[data-mini]').src = URL.createObjectURL(f);
+            drop.classList.remove('con-error'); error.hidden = true;
+        } else if (problema) {
+            input.value = ''; mostrarError(problema);
+        }
+    }
+
+    input.addEventListener('change', pintar);
+    ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('arrastrando'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('arrastrando'); }); });
+    drop.addEventListener('drop', function (e) {
+        if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; pintar(); }
+    });
+    drop.querySelector('[data-quitar]').addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation(); input.value = ''; pintar();
+    });
+    form.addEventListener('submit', function (e) {
+        if (!input.files.length) { e.preventDefault(); mostrarError('Adjunta la imagen de tu comprobante.'); }
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

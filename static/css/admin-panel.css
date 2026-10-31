@@ -748,3 +748,31 @@ body.pn-admin #content-main p a:hover, body.pn-admin .help a:hover { text-decora
 }
 .pn-admin.delete-confirmation form .cancel-link:hover { background: #f1f4fa; }
 .pn-admin.delete-confirmation #content ul li { margin-bottom: 4px; color: var(--pn-gris); }
+
+
+/* ---------- Módulos nuevos del grupo (Pagos, Auditoría, doble aprobación) ---------- */
+.pn-admin a.pn-mini-enlace { color: var(--pn-gris); }
+.pn-admin a.pn-mini-enlace:hover { background: #eef4ff; color: var(--pn-azul); }
+.pn-admin a.pn-mini-enlace b { color: #ea580c; }
+
+/* Estados de pagos (texto que muestra Django) */
+.pn-badge-pendiente_de_revision { background: #fef3c7; color: #b45309; }
+.pn-badge-aprobado { background: #dcfce7; color: #047857; }
+.pn-badge-rechazado { background: #fee2e2; color: #b91c1c; }
+.pn-badge-pendiente_de_segunda_aprobacion { background: #ede9fe; color: #6d28d9; }
+
+/* Etiquetas que arma SolicitudAdmin (badge-warning, badge-success…) */
+.pn-admin #result_list span.badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px !important; border-radius: 999px; font-size: 12.5px !important; font-weight: 700; white-space: nowrap;
+    background: #eef1f7; color: #475569;
+}
+.pn-admin #result_list span.badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .85; }
+.pn-admin span.badge-warning { background: #fef3c7 !important; color: #b45309 !important; }
+.pn-admin span.badge-primary { background: #e0ecff !important; color: #1d4ed8 !important; }
+.pn-admin span.badge-info    { background: #ede9fe !important; color: #6d28d9 !important; }
+.pn-admin span.badge-success { background: #dcfce7 !important; color: #047857 !important; }
+.pn-admin span.badge-danger  { background: #fee2e2 !important; color: #b91c1c !important; }
+
+/* Miniatura del comprobante en la lista de pagos */
+.pn-admin td.field-miniatura img { height: 52px !important; width: 52px; object-fit: cover; border-radius: 10px !important; border: 1px solid var(--pn-borde); display: block; }
