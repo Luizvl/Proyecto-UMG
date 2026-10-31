@@ -3,6 +3,7 @@ Crea datos de prueba para ver el panel del estudiante con información:
 
     python manage.py crear_datos_demo
 
+- Administrador: admin@becas.local / Admin12345  (entra a /admin/)
 - Estudiante: estudiante@becas.local / Estudiante123
 - 3 convocatorias abiertas
 - 3 solicitudes: aprobada, con documentos pendientes y en evaluación
@@ -26,6 +27,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         hoy = timezone.localdate()
+
+        # Administrador con rol ADMINISTRADOR (createsuperuser lo deja como Estudiante)
+        admin, _ = Usuario.objects.update_or_create(
+            email="admin@becas.local",
+            defaults={
+                "username": "admin@becas.local",
+                "first_name": "Administrador",
+                "rol": Usuario.Rol.ADMINISTRADOR,
+                "is_staff": True,
+                "is_superuser": True,
+            },
+        )
+        admin.set_password("Admin12345")
+        admin.save()
 
         estudiante, _ = Usuario.objects.update_or_create(
             email="estudiante@becas.local",
@@ -103,5 +118,7 @@ class Command(BaseCommand):
         ])
 
         self.stdout.write(self.style.SUCCESS(
-            "Datos de prueba listos. Entra con estudiante@becas.local / Estudiante123"
+            "Datos de prueba listos.\n"
+            "  Administrador: admin@becas.local / Admin12345\n"
+            "  Estudiante:    estudiante@becas.local / Estudiante123"
         ))
