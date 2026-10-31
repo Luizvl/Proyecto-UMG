@@ -1,5 +1,7 @@
 from datetime import date, timedelta
+from unittest.mock import patch
 
+from django.core import mail
 from django.urls import reverse
 
 from rest_framework import status
@@ -372,4 +374,55 @@ class NotificacionTests(APITestCase):
                 destinatario=self.estudiante,
             ).count(),
             3,
+        )
+
+    def test_cambio_de_estado_envia_correo_al_estudiante(
+        self,
+    ):
+        solicitud = self.crear_solicitud()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            self.iniciar_evaluacion(
+                solicitud
+            )
+
+        self.assertEqual(
+            len(mail.outbox),
+            1,
+        )
+
+        self.assertEqual(
+            mail.outbox[0].to,
+            [self.estudiante.email],
+        )
+
+        self.assertIn(
+            "evaluación",
+            mail.outbox[0].body.lower(),
+        )
+
+    def test_falla_del_correo_no_revierte_el_cambio_de_estado(
+        self,
+    ):
+        solicitud = self.crear_solicitud()
+
+        with patch(
+            "apps.solicitudes.states.send_mail",
+            side_effect=Exception("SMTP caído"),
+        ):
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.iniciar_evaluacion(
+                    solicitud
+                )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        solicitud.refresh_from_db()
+
+        self.assertEqual(
+            solicitud.estado,
+            Solicitud.EN_EVALUACION,
         )
