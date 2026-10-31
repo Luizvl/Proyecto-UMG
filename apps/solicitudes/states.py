@@ -14,9 +14,16 @@ Reglas de Negocio:
 Además, cada cambio de estado:
     - Registra la trazabilidad en HistorialEstado.
     - Genera automáticamente una Notificación para el estudiante.
+    - Envía un correo electrónico al estudiante (si tiene correo).
 """
 
+import logging
+
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.db import transaction
+
+logger = logging.getLogger(__name__)
 
 
 class TransicionInvalidaError(ValidationError):
@@ -59,6 +66,33 @@ class EstadoSolicitud:
         }
         return nombres.get(estado, estado)
 
+    def _programar_correo(self, solicitud, estado_texto, mensaje):
+        """
+        Envía el correo solo si la transacción se confirma,
+        y un fallo de Gmail nunca revierte el cambio de estado.
+        """
+        correo = solicitud.estudiante.email
+        if not correo:
+            return
+
+        solicitud_id = solicitud.id
+        asunto = f"Solicitud #{solicitud_id}: {estado_texto}"
+        cuerpo = (
+            f"Hola,\n\n{mensaje}\n\n"
+            "Puedes ver el detalle ingresando a la plataforma de becas.\n"
+        )
+
+        def enviar():
+            try:
+                send_mail(asunto, cuerpo, None, [correo], fail_silently=False)
+            except Exception:
+                logger.exception(
+                    "No se pudo enviar el correo de la solicitud #%s",
+                    solicitud_id,
+                )
+
+        transaction.on_commit(enviar)
+
     def _crear_notificacion(self, solicitud, estado_anterior, nuevo_estado, comentario=""):
         """Genera una notificación automática para el estudiante."""
         from .models import Notificacion
@@ -90,6 +124,8 @@ class EstadoSolicitud:
             solicitud=solicitud,
             mensaje=mensaje,
         )
+
+        self._programar_correo(solicitud, estado_nuevo_texto, mensaje)
 
     def _cambiar_estado(self, solicitud, nuevo_estado, comentario=""):
         """Cambia el estado, registra el historial y dispara la notificación."""
