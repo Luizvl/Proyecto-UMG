@@ -11,7 +11,7 @@
 | :--- | :--- | :--- | :--- |
 | Alvaro Daniel Tubac Lopez |  0910-23-21648|  |  |
 | Jonathan Enrique Toc Lopez |0910-23-20428 |  |  |
-|  Byron Alberto Martinez Osorio| 0910-23-3838 |  |  |
+| Byron Alberto Martinez Osorio| 0910-23-3838 |  |  |
 | Meily Sucely Chonay Can | 0910-23-9932 | | Documentación |
 | Luis Alfredo Velasquez Lopez | 0910-23-2040 | |  |
 
